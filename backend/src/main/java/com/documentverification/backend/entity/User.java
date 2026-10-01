@@ -97,8 +97,13 @@ public class User {
         return createdAt;
     }
 
+    // Provided both getActive() and isActive() to prevent any method mismatch
     public Boolean getActive() {
-        return active;
+        return active != null && active;
+    }
+
+    public boolean isActive() {
+        return active != null && active;
     }
 
     public void setActive(Boolean active) {

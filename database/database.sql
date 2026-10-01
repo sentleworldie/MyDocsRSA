@@ -92,3 +92,12 @@ USE document_verification;
 
 ALTER TABLE users
 ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;
+
+
+USE document_verification;
+
+ALTER TABLE documents 
+ADD COLUMN original_file_name VARCHAR(255) NOT NULL,
+ADD COLUMN stored_file_name VARCHAR(255) NOT NULL,
+ADD COLUMN updated_at DATETIME(6);
+
