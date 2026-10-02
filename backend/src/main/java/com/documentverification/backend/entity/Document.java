@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -54,6 +55,12 @@ public class Document {
     private LocalDateTime uploadedAt;
 
     private LocalDateTime updatedAt;
+
+
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "previous_document_id")
+    private Document previousDocument;
 
     public Document() {
     }
@@ -132,6 +139,14 @@ public class Document {
 
     public void setDocumentName(String documentName) {
         this.documentName = documentName;
+    }
+
+    public Document getPreviousDocument() {
+        return previousDocument;
+    }
+
+    public void setPreviousDocument(Document previousDocument) {
+        this.previousDocument = previousDocument;
     }
 
     @PrePersist

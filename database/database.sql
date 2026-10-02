@@ -105,3 +105,25 @@ USE document_verification;
 
 ALTER TABLE documents
 MODIFY COLUMN document_type VARCHAR(50) NOT NULL;
+
+USE document_verification;
+ALTER TABLE documents
+MODIFY COLUMN status VARCHAR(50) NOT NULL;
+
+USE document_verification;
+
+ALTER TABLE documents
+ADD COLUMN previous_document_id BIGINT NULL;
+
+ALTER TABLE documents
+ADD CONSTRAINT fk_previous_document
+FOREIGN KEY (previous_document_id)
+REFERENCES documents(id);
+
+USE document_verification;
+
+SELECT id, original_file_name, stored_file_name, file_path, status
+FROM documents
+WHERE id = 4;
+
+USE document_verification;

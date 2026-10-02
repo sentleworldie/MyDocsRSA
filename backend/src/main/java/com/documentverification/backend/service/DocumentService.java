@@ -5,11 +5,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.documentverification.backend.dto.DocumentHistoryResponse;
 import com.documentverification.backend.entity.Document;
 import com.documentverification.backend.entity.DocumentType;
 import com.documentverification.backend.entity.User;
@@ -20,108 +25,310 @@ import com.documentverification.backend.repository.UserRepository;
 @Service
 public class DocumentService {
 
-    private final DocumentRepository documentRepository;
-    private final UserRepository userRepository;
+        private final DocumentRepository documentRepository;
+        private final UserRepository userRepository;
+        private final DocumentValidationService documentValidationService;
 
-    private final Path uploadDirectory = Paths.get("document-storage").toAbsolutePath().normalize();
+        private final Path uploadDirectory = Paths.get("document-storage").toAbsolutePath().normalize();
 
-    public DocumentService(
-            DocumentRepository documentRepository,
-            UserRepository userRepository) {
+        public DocumentService(
+                        DocumentRepository documentRepository,
+                        UserRepository userRepository,
+                        DocumentValidationService documentValidationService) {
 
-        this.documentRepository = documentRepository;
-        this.userRepository = userRepository;
+                this.documentRepository = documentRepository;
+                this.userRepository = userRepository;
+                this.documentValidationService = documentValidationService;
 
-        try {
-            Files.createDirectories(uploadDirectory);
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "Could not create document storage directory", e);
-        }
-    }
-
-    public Document uploadDocument(
-            Long userId,
-            DocumentType documentType,
-            MultipartFile file) {
-
-        // Check that a file was provided
-        if (file == null || file.isEmpty()) {
-            throw new RuntimeException("Document file is required");
+                try {
+                        Files.createDirectories(uploadDirectory);
+                } catch (IOException e) {
+                        throw new RuntimeException(
+                                        "Could not create document storage directory", e);
+                }
         }
 
-        // Maximum file size: 10 MB
-        if (file.getSize() > 10 * 1024 * 1024) {
-            throw new RuntimeException(
-                    "File size must not exceed 10 MB");
+        // ============================================================
+        // UPLOAD DOCUMENT
+        // ============================================================
+
+        public Document uploadDocument(
+                        Long userId,
+                        DocumentType documentType,
+                        MultipartFile file) {
+                documentValidationService.validateUpload(file);
+
+                if (file == null || file.isEmpty()) {
+                        throw new RuntimeException("Document file is required");
+                }
+
+                if (file.getSize() > 10 * 1024 * 1024) {
+                        throw new RuntimeException(
+                                        "File size must not exceed 10 MB");
+                }
+
+                String originalFileName = file.getOriginalFilename();
+
+                if (originalFileName == null || originalFileName.isBlank()) {
+                        throw new RuntimeException("Invalid file name");
+                }
+
+                String fileExtension = "";
+
+                int dotIndex = originalFileName.lastIndexOf(".");
+
+                if (dotIndex > 0
+                                && dotIndex < originalFileName.length() - 1) {
+
+                        fileExtension = originalFileName
+                                        .substring(dotIndex + 1)
+                                        .toLowerCase();
+                }
+
+                if (!fileExtension.equals("pdf")
+                                && !fileExtension.equals("jpg")
+                                && !fileExtension.equals("jpeg")
+                                && !fileExtension.equals("png")) {
+
+                        throw new RuntimeException(
+                                        "Only PDF, JPG, JPEG and PNG files are allowed");
+                }
+
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                String storedFileName = UUID.randomUUID() + "_" + originalFileName;
+
+                Path targetLocation = uploadDirectory
+                                .resolve(storedFileName)
+                                .normalize();
+
+                try {
+
+                        Files.copy(
+                                        file.getInputStream(),
+                                        targetLocation,
+                                        StandardCopyOption.REPLACE_EXISTING);
+
+                } catch (IOException e) {
+
+                        throw new RuntimeException(
+                                        "Could not store document", e);
+                }
+
+                Document document = new Document();
+
+                document.setUser(user);
+                document.setDocumentName(originalFileName);
+                document.setDocumentType(documentType);
+                document.setStatus(VerificationStatus.PENDING);
+                document.setOriginalFileName(originalFileName);
+                document.setStoredFileName(storedFileName);
+                document.setFilePath(targetLocation.toString());
+
+                return documentRepository.save(document);
         }
 
-        // Get the original file name
-        String originalFileName = file.getOriginalFilename();
+        // ============================================================
+        // RESUBMIT DOCUMENT
+        // ============================================================
 
-        if (originalFileName == null || originalFileName.isBlank()) {
-            throw new RuntimeException("Invalid file name");
+        public Document resubmitDocument(
+                        Long previousDocumentId,
+                        MultipartFile file) {
+                documentValidationService.validateUpload(file);
+
+                if (file == null || file.isEmpty()) {
+                        throw new RuntimeException("Document file is required");
+                }
+
+                if (file.getSize() > 10 * 1024 * 1024) {
+                        throw new RuntimeException(
+                                        "File size must not exceed 10 MB");
+                }
+
+                Document previousDocument = documentRepository
+                                .findById(previousDocumentId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Previous document not found"));
+
+                if (previousDocument.getStatus() != VerificationStatus.RESUBMISSION_REQUIRED) {
+
+                        throw new RuntimeException(
+                                        "This document does not require resubmission");
+                }
+
+                String originalFileName = file.getOriginalFilename();
+
+                if (originalFileName == null
+                                || originalFileName.isBlank()) {
+
+                        throw new RuntimeException("Invalid file name");
+                }
+
+                String fileExtension = "";
+
+                int dotIndex = originalFileName.lastIndexOf(".");
+
+                if (dotIndex > 0
+                                && dotIndex < originalFileName.length() - 1) {
+
+                        fileExtension = originalFileName
+                                        .substring(dotIndex + 1)
+                                        .toLowerCase();
+                }
+
+                if (!fileExtension.equals("pdf")
+                                && !fileExtension.equals("jpg")
+                                && !fileExtension.equals("jpeg")
+                                && !fileExtension.equals("png")) {
+
+                        throw new RuntimeException(
+                                        "Only PDF, JPG, JPEG and PNG files are allowed");
+                }
+
+                String storedFileName = UUID.randomUUID() + "_" + originalFileName;
+
+                Path targetLocation = uploadDirectory
+                                .resolve(storedFileName)
+                                .normalize();
+
+                try {
+
+                        Files.copy(
+                                        file.getInputStream(),
+                                        targetLocation,
+                                        StandardCopyOption.REPLACE_EXISTING);
+
+                } catch (IOException e) {
+
+                        throw new RuntimeException(
+                                        "Could not store document", e);
+                }
+
+                Document newDocument = new Document();
+
+                newDocument.setUser(previousDocument.getUser());
+
+                newDocument.setDocumentType(
+                                previousDocument.getDocumentType());
+
+                newDocument.setDocumentName(originalFileName);
+
+                newDocument.setStatus(
+                                VerificationStatus.PENDING);
+
+                newDocument.setOriginalFileName(
+                                originalFileName);
+
+                newDocument.setStoredFileName(
+                                storedFileName);
+
+                newDocument.setFilePath(
+                                targetLocation.toString());
+
+                newDocument.setPreviousDocument(
+                                previousDocument);
+
+                return documentRepository.save(newDocument);
         }
 
-        // Validate file extension
-        String fileExtension = "";
+        // ============================================================
+        // GET ALL DOCUMENTS FOR A USER
+        // ============================================================
 
-        int dotIndex = originalFileName.lastIndexOf(".");
+        public List<Document> getDocumentsByUser(Long userId) {
 
-        if (dotIndex > 0
-                && dotIndex < originalFileName.length() - 1) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            fileExtension = originalFileName
-                    .substring(dotIndex + 1)
-                    .toLowerCase();
+                return documentRepository.findByUser(user);
         }
 
-        if (!fileExtension.equals("pdf")
-                && !fileExtension.equals("jpg")
-                && !fileExtension.equals("jpeg")
-                && !fileExtension.equals("png")) {
+        // ============================================================
+        // GET ONE DOCUMENT
+        // ============================================================
 
-            throw new RuntimeException(
-                    "Only PDF, JPG, JPEG and PNG files are allowed");
+        public Document getDocumentById(Long documentId) {
+
+                return documentRepository.findById(documentId)
+                                .orElseThrow(() -> new RuntimeException("Document not found"));
         }
+        // ============================================================
+        // GET DOCUMENT HISTORY
+        // ============================================================
 
-        // Find the user who is uploading the document
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        public List<DocumentHistoryResponse> getDocumentHistory(
+                        Long documentId) {
 
-        // Generate a unique name for storing the file
-        String storedFileName = UUID.randomUUID() + "_" + originalFileName;
+                Document currentDocument = documentRepository
+                                .findById(documentId)
+                                .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        Path targetLocation = uploadDirectory
-                .resolve(storedFileName)
-                .normalize();
+                List<DocumentHistoryResponse> history = new ArrayList<>();
 
-        // Store the file
-        try {
+                Document current = currentDocument;
 
-            Files.copy(
-                    file.getInputStream(),
-                    targetLocation,
-                    StandardCopyOption.REPLACE_EXISTING);
+                while (current != null) {
 
-        } catch (IOException e) {
+                        Long previousDocumentId = null;
 
-            throw new RuntimeException(
-                    "Could not store document", e);
+                        if (current.getPreviousDocument() != null) {
+                                previousDocumentId = current.getPreviousDocument().getId();
+                        }
+
+                        DocumentHistoryResponse response = new DocumentHistoryResponse(
+                                        current.getId(),
+                                        current.getDocumentType(),
+                                        current.getOriginalFileName(),
+                                        current.getStatus(),
+                                        current.getRejectionReason(),
+                                        current.getUploadedAt(),
+                                        current.getUpdatedAt(),
+                                        previousDocumentId);
+
+                        history.add(response);
+
+                        current = current.getPreviousDocument();
+                }
+
+                return history;
         }
+        // ============================================================
+        // DOWNLOAD VERIFIED DOCUMENT
+        // ============================================================
 
-        // Create the document database record
-        Document document = new Document();
+        public Resource downloadDocument(Long documentId) {
 
-        document.setUser(user);
-        document.setDocumentName(originalFileName);
-        document.setDocumentType(documentType);
-        document.setStatus(VerificationStatus.PENDING);
-        document.setOriginalFileName(originalFileName);
-        document.setStoredFileName(storedFileName);
-        document.setFilePath(targetLocation.toString());
+                Document document = documentRepository.findById(documentId)
+                                .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        // Save the document to MySQL
-        return documentRepository.save(document);
-    }
+                if (document.getStatus() != VerificationStatus.APPROVED) {
+                        throw new RuntimeException(
+                                        "Only approved documents can be downloaded");
+                }
+
+                // Validate that the stored file still exists,
+                // is a valid file, is readable, and is not empty.
+                documentValidationService.validateStoredFile(
+                                document.getFilePath());
+
+                try {
+
+                        Path filePath = Paths.get(
+                                        document.getFilePath())
+                                        .toAbsolutePath()
+                                        .normalize();
+
+                        Resource resource = new UrlResource(filePath.toUri());
+
+                        return resource;
+
+                } catch (IOException e) {
+
+                        throw new RuntimeException(
+                                        "Could not access document file",
+                                        e);
+                }
+        }
 }
