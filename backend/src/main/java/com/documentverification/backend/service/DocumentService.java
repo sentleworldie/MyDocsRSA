@@ -23,8 +23,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
 
-    private final Path uploadDirectory =
-            Paths.get("document-storage").toAbsolutePath().normalize();
+    private final Path uploadDirectory = Paths.get("document-storage").toAbsolutePath().normalize();
 
     public DocumentService(
             DocumentRepository documentRepository,
@@ -88,17 +87,14 @@ public class DocumentService {
 
         // Find the user who is uploading the document
         User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Generate a unique name for storing the file
-        String storedFileName =
-                UUID.randomUUID() + "_" + originalFileName;
+        String storedFileName = UUID.randomUUID() + "_" + originalFileName;
 
-        Path targetLocation =
-                uploadDirectory
-                        .resolve(storedFileName)
-                        .normalize();
+        Path targetLocation = uploadDirectory
+                .resolve(storedFileName)
+                .normalize();
 
         // Store the file
         try {
@@ -106,8 +102,7 @@ public class DocumentService {
             Files.copy(
                     file.getInputStream(),
                     targetLocation,
-                    StandardCopyOption.REPLACE_EXISTING
-            );
+                    StandardCopyOption.REPLACE_EXISTING);
 
         } catch (IOException e) {
 
@@ -119,6 +114,7 @@ public class DocumentService {
         Document document = new Document();
 
         document.setUser(user);
+        document.setDocumentName(originalFileName);
         document.setDocumentType(documentType);
         document.setStatus(VerificationStatus.PENDING);
         document.setOriginalFileName(originalFileName);

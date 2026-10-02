@@ -32,6 +32,9 @@ public class Document {
     @Column(nullable = false)
     private DocumentType documentType;
 
+    @Column(name = "document_name", nullable = false)
+    private String documentName;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VerificationStatus status;
@@ -123,6 +126,14 @@ public class Document {
         return updatedAt;
     }
 
+    public String getDocumentName() {
+        return documentName;
+    }
+
+    public void setDocumentName(String documentName) {
+        this.documentName = documentName;
+    }
+
     @PrePersist
     protected void onCreate() {
         uploadedAt = LocalDateTime.now();
@@ -137,4 +148,5 @@ public class Document {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

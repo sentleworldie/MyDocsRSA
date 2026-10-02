@@ -101,3 +101,7 @@ ADD COLUMN original_file_name VARCHAR(255) NOT NULL,
 ADD COLUMN stored_file_name VARCHAR(255) NOT NULL,
 ADD COLUMN updated_at DATETIME(6);
 
+USE document_verification;
+
+ALTER TABLE documents
+MODIFY COLUMN document_type VARCHAR(50) NOT NULL;
