@@ -16,8 +16,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> validation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(Map.of(
                 "message", "Validation failed",
                 "errors", errors));
@@ -33,9 +33,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
     }
 
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> unexpected(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "An unexpected server error occurred"));
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    .body(Map.of("message", "An unexpected server error occurred"));
     }
+    
 }

@@ -1,14 +1,19 @@
 package com.documentverification.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.documentverification.backend.entity.CredentialStatus;
+import com.documentverification.backend.entity.DigitalCredential;
 import com.documentverification.backend.entity.Document;
 import com.documentverification.backend.entity.VerificationStatus;
+import com.documentverification.backend.repository.DigitalCredentialRepository;
 import com.documentverification.backend.repository.DocumentRepository;
 
 @Service
@@ -18,13 +23,16 @@ public class VerificationService {
             LoggerFactory.getLogger(VerificationService.class);
 
     private final DocumentRepository documentRepository;
+    private final DigitalCredentialRepository digitalCredentialRepository;
     private final EmailService emailService;
 
     public VerificationService(
             DocumentRepository documentRepository,
+            DigitalCredentialRepository digitalCredentialRepository,
             EmailService emailService) {
 
         this.documentRepository = documentRepository;
+        this.digitalCredentialRepository = digitalCredentialRepository;
         this.emailService = emailService;
     }
 
@@ -63,6 +71,7 @@ public class VerificationService {
     // APPROVE DOCUMENT
     // ============================================================
 
+    @Transactional
     public Document approveDocument(Long documentId) {
 
         Document document = getDocument(documentId);
@@ -74,11 +83,62 @@ public class VerificationService {
             );
         }
 
-        document.setStatus(VerificationStatus.APPROVED);
+        // --------------------------------------------------------
+        // APPROVE DOCUMENT
+        // --------------------------------------------------------
 
+        document.setStatus(VerificationStatus.APPROVED);
         document.setRejectionReason(null);
 
         Document savedDocument = documentRepository.save(document);
+
+        // --------------------------------------------------------
+        // CREATE DIGITAL CREDENTIAL
+        // --------------------------------------------------------
+
+        DigitalCredential credential =
+                digitalCredentialRepository
+                        .findByDocument(savedDocument)
+                        .orElse(null);
+
+        if (credential == null) {
+
+            credential = new DigitalCredential();
+
+            credential.setUser(savedDocument.getUser());
+            credential.setDocument(savedDocument);
+            credential.setStatus(CredentialStatus.ACTIVE);
+
+            LocalDateTime issuedAt = LocalDateTime.now();
+
+            credential.setIssuedAt(issuedAt);
+
+            // Default credential validity:
+            // 6 months from the date of approval.
+            credential.setValidUntil(
+                    issuedAt.plusMonths(6)
+            );
+
+            credential =
+                    digitalCredentialRepository.save(credential);
+
+            logger.info(
+                    "Digital credential created for document ID {} with credential ID {}",
+                    savedDocument.getId(),
+                    credential.getId()
+            );
+
+        } else {
+
+            logger.info(
+                    "Digital credential already exists for document ID {}",
+                    savedDocument.getId()
+            );
+        }
+
+        // --------------------------------------------------------
+        // SEND APPROVAL EMAIL
+        // --------------------------------------------------------
 
         sendNotification(
                 savedDocument,
@@ -91,6 +151,7 @@ public class VerificationService {
                 Document type: """ + savedDocument.getDocumentType() + "\n" +
                 "Document ID: " + savedDocument.getId() + "\n" +
                 "Status: APPROVED\n\n" +
+                "A digital credential has been created for this document.\n" +
                 "You can now log in to MyDocs RSA to view your document.\n\n" +
                 "Regards,\n" +
                 "MyDocs RSA"
@@ -124,7 +185,6 @@ public class VerificationService {
         }
 
         document.setStatus(VerificationStatus.REJECTED);
-
         document.setRejectionReason(reason);
 
         Document savedDocument = documentRepository.save(document);

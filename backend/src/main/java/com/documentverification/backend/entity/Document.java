@@ -51,6 +51,16 @@ public class Document {
 
     private String rejectionReason;
 
+    @Column(name = "has_certified_copy", nullable = false)
+    private boolean hasCertifiedCopy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "processing_path")
+    private ProcessingPath processingPath;
+
+    @Column(name = "file_fingerprint", length = 64)
+    private String fileFingerprint;
+
     @Column(nullable = false)
     private LocalDateTime uploadedAt;
 
@@ -124,6 +134,13 @@ public class Document {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
+
+    public boolean isHasCertifiedCopy() { return hasCertifiedCopy; }
+    public void setHasCertifiedCopy(boolean hasCertifiedCopy) { this.hasCertifiedCopy = hasCertifiedCopy; }
+    public ProcessingPath getProcessingPath() { return processingPath; }
+    public void setProcessingPath(ProcessingPath processingPath) { this.processingPath = processingPath; }
+    public String getFileFingerprint() { return fileFingerprint; }
+    public void setFileFingerprint(String fileFingerprint) { this.fileFingerprint = fileFingerprint; }
 
     public LocalDateTime getUploadedAt() {
         return uploadedAt;

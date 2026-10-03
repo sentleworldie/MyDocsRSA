@@ -30,8 +30,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/api/test-email").hasRole("ADMIN")
-                        .requestMatchers("/api/verification/**").hasAnyRole("ADMIN", "POLICE_OFFICER")
-                        .requestMatchers("/api/documents/upload", "/api/documents/resubmit").hasRole("USER")
+                        .requestMatchers("/api/verification/**", "/api/certification/requests/pending", "/api/certification/requests/*/review", "/api/certification/requests/*/approve", "/api/certification/requests/*/reject", "/api/certification/requests/*/more-information", "/api/certification/verify/**").hasAnyRole("ADMIN", "POLICE_OFFICER")
+                        .requestMatchers("/api/documents/upload", "/api/documents/resubmit", "/api/certification/requests", "/api/certification/requests/me", "/api/certification/credentials/me", "/api/certification/credentials/*", "/api/credentials/*/request").hasRole("USER")
                         .requestMatchers("/api/documents/user/**", "/api/documents/*/history", "/api/documents/*/download", "/api/documents/*")
                             .hasAnyRole("USER", "ADMIN", "POLICE_OFFICER")
                         .anyRequest().authenticated())

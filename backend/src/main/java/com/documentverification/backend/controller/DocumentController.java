@@ -64,8 +64,7 @@ public class DocumentController {
     public ResponseEntity<?> getUserDocuments(@PathVariable Long userId, Authentication authentication) {
         try {
             User user = currentUser(authentication);
-            if (user.getRole() == Role.USER && !user.getId().equals(userId))
-                return forbidden();
+            if (user.getRole() == Role.USER && !user.getId().equals(userId)) return forbidden();
             List<DocumentResponse> documents = documentService.getDocumentsByUser(userId).stream()
                     .map(DocumentResponse::from).toList();
             return ResponseEntity.ok(documents);
@@ -78,8 +77,7 @@ public class DocumentController {
     public ResponseEntity<?> getDocument(@PathVariable Long documentId, Authentication authentication) {
         try {
             Document document = documentService.getDocumentById(documentId);
-            if (!canAccessDocument(authentication, document))
-                return forbidden();
+            if (!canAccessDocument(authentication, document)) return forbidden();
             return ResponseEntity.ok(DocumentResponse.from(document));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
@@ -94,8 +92,7 @@ public class DocumentController {
         try {
             Document previous = documentService.getDocumentById(previousDocumentId);
             User user = currentUser(authentication);
-            if (user.getRole() != Role.USER || !user.getId().equals(previous.getUser().getId()))
-                return forbidden();
+            if (user.getRole() != Role.USER || !user.getId().equals(previous.getUser().getId())) return forbidden();
             Document document = documentService.resubmitDocument(previousDocumentId, file);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "message", "Document resubmitted successfully",
@@ -113,8 +110,7 @@ public class DocumentController {
     public ResponseEntity<?> getDocumentHistory(@PathVariable Long documentId, Authentication authentication) {
         try {
             Document document = documentService.getDocumentById(documentId);
-            if (!canAccessDocument(authentication, document))
-                return forbidden();
+            if (!canAccessDocument(authentication, document)) return forbidden();
             List<DocumentHistoryResponse> history = documentService.getDocumentHistory(documentId);
             return ResponseEntity.ok(history);
         } catch (RuntimeException e) {
@@ -126,13 +122,10 @@ public class DocumentController {
     public ResponseEntity<?> downloadDocument(@PathVariable Long documentId, Authentication authentication) {
         try {
             Document document = documentService.getDocumentById(documentId);
-            if (!canAccessDocument(authentication, document))
-                return forbidden();
+            if (!canAccessDocument(authentication, document)) return forbidden();
             Resource resource = documentService.downloadDocument(documentId);
             return ResponseEntity.ok()
-                    .header(
-                            HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + document.getOriginalFileName().replace("\"", "") + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFileName().replace("\"", "") + "\"")
                     .body(resource);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -150,7 +143,6 @@ public class DocumentController {
     }
 
     private ResponseEntity<Map<String, String>> forbidden() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("message", "You are not allowed to access this document"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "You are not allowed to access this document"));
     }
 }
