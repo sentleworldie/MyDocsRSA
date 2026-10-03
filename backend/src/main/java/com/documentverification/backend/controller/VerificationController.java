@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.documentverification.backend.dto.ReviewRequest;
 import com.documentverification.backend.entity.Document;
+import com.documentverification.backend.dto.DocumentResponse;
 import com.documentverification.backend.service.VerificationService;
 
 @RestController
@@ -39,7 +41,7 @@ public class VerificationController {
             List<Document> documents =
                     verificationService.getPendingDocuments();
 
-            return ResponseEntity.ok(documents);
+            return ResponseEntity.ok(documents.stream().map(DocumentResponse::from).toList());
 
         } catch (RuntimeException e) {
 
@@ -129,7 +131,7 @@ public class VerificationController {
     @PutMapping("/{documentId}/reject")
     public ResponseEntity<?> rejectDocument(
             @PathVariable Long documentId,
-            @RequestBody ReviewRequest request) {
+            @Valid @RequestBody ReviewRequest request) {
 
         try {
 
@@ -170,7 +172,7 @@ public class VerificationController {
     @PutMapping("/{documentId}/resubmission")
     public ResponseEntity<?> requestResubmission(
             @PathVariable Long documentId,
-            @RequestBody ReviewRequest request) {
+            @Valid @RequestBody ReviewRequest request) {
 
         try {
 

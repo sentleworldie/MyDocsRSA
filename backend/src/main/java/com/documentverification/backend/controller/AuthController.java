@@ -38,7 +38,8 @@ public class AuthController {
                             "userId", user.getId(),
                             "fullName", user.getFullName(),
                             "email", user.getEmail(),
-                            "role", user.getRole().name()
+                            "role", user.getRole().name(),
+                            "token", authService.createToken(user)
                     ));
 
         } catch (RuntimeException e) {
@@ -64,7 +65,8 @@ public class AuthController {
                             "userId", user.getId(),
                             "fullName", user.getFullName(),
                             "email", user.getEmail(),
-                            "role", user.getRole().name()
+                            "role", user.getRole().name(),
+                            "token", authService.createToken(user)
                     )
             );
 

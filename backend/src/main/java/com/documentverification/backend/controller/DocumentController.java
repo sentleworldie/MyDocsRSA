@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,245 +17,140 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.documentverification.backend.dto.DocumentHistoryResponse;
+import com.documentverification.backend.dto.DocumentResponse;
 import com.documentverification.backend.entity.Document;
 import com.documentverification.backend.entity.DocumentType;
+import com.documentverification.backend.entity.Role;
+import com.documentverification.backend.entity.User;
+import com.documentverification.backend.repository.UserRepository;
 import com.documentverification.backend.service.DocumentService;
 
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
 
-        private final DocumentService documentService;
+    private final DocumentService documentService;
+    private final UserRepository userRepository;
 
-        public DocumentController(DocumentService documentService) {
-                this.documentService = documentService;
+    public DocumentController(DocumentService documentService, UserRepository userRepository) {
+        this.documentService = documentService;
+        this.userRepository = userRepository;
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadDocument(
+            @RequestParam Long userId,
+            @RequestParam DocumentType documentType,
+            @RequestParam MultipartFile file,
+            Authentication authentication) {
+        try {
+            User user = currentUser(authentication);
+            if (user.getRole() != Role.USER || !user.getId().equals(userId)) {
+                return forbidden();
+            }
+            Document document = documentService.uploadDocument(userId, documentType, file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "message", "Document uploaded successfully",
+                    "documentId", document.getId(),
+                    "documentType", document.getDocumentType().name(),
+                    "status", document.getStatus().name(),
+                    "fileName", document.getOriginalFileName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
 
-        // ============================================================
-        // UPLOAD DOCUMENT
-        // ============================================================
-
-        @PostMapping("/upload")
-        public ResponseEntity<?> uploadDocument(
-                        @RequestParam Long userId,
-                        @RequestParam DocumentType documentType,
-                        @RequestParam MultipartFile file) {
-
-                try {
-
-                        Document document = documentService.uploadDocument(
-                                        userId,
-                                        documentType,
-                                        file);
-
-                        return ResponseEntity
-                                        .status(HttpStatus.CREATED)
-                                        .body(Map.of(
-                                                        "message",
-                                                        "Document uploaded successfully",
-
-                                                        "documentId",
-                                                        document.getId(),
-
-                                                        "documentType",
-                                                        document.getDocumentType().name(),
-
-                                                        "status",
-                                                        document.getStatus().name(),
-
-                                                        "fileName",
-                                                        document.getOriginalFileName()));
-
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .badRequest()
-                                        .body(Map.of(
-                                                        "message",
-                                                        e.getMessage()));
-                }
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getUserDocuments(@PathVariable Long userId, Authentication authentication) {
+        try {
+            User user = currentUser(authentication);
+            if (user.getRole() == Role.USER && !user.getId().equals(userId))
+                return forbidden();
+            List<DocumentResponse> documents = documentService.getDocumentsByUser(userId).stream()
+                    .map(DocumentResponse::from).toList();
+            return ResponseEntity.ok(documents);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
 
-        // ============================================================
-        // GET ALL DOCUMENTS FOR A USER
-        // ============================================================
-
-        @GetMapping("/user/{userId}")
-        public ResponseEntity<?> getUserDocuments(
-                        @PathVariable Long userId) {
-
-                try {
-
-                        List<Document> documents = documentService.getDocumentsByUser(userId);
-
-                        return ResponseEntity.ok(documents);
-
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .badRequest()
-                                        .body(Map.of(
-                                                        "message",
-                                                        e.getMessage()));
-                }
+    @GetMapping("/{documentId}")
+    public ResponseEntity<?> getDocument(@PathVariable Long documentId, Authentication authentication) {
+        try {
+            Document document = documentService.getDocumentById(documentId);
+            if (!canAccessDocument(authentication, document))
+                return forbidden();
+            return ResponseEntity.ok(DocumentResponse.from(document));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         }
+    }
 
-        // ============================================================
-        // GET SINGLE DOCUMENT
-        // ============================================================
-
-        @GetMapping("/{documentId}")
-        public ResponseEntity<?> getDocument(
-                        @PathVariable Long documentId) {
-
-                try {
-
-                        Document document = documentService.getDocumentById(documentId);
-
-                        return ResponseEntity.ok(
-                                        Map.of(
-                                                        "documentId",
-                                                        document.getId(),
-
-                                                        "userId",
-                                                        document.getUser().getId(),
-
-                                                        "documentName",
-                                                        document.getDocumentName(),
-
-                                                        "documentType",
-                                                        document.getDocumentType().name(),
-
-                                                        "status",
-                                                        document.getStatus().name(),
-
-                                                        "originalFileName",
-                                                        document.getOriginalFileName(),
-
-                                                        "uploadedAt",
-                                                        document.getUploadedAt(),
-
-                                                        "updatedAt",
-                                                        document.getUpdatedAt(),
-
-                                                        "rejectionReason",
-                                                        document.getRejectionReason() == null
-                                                                        ? ""
-                                                                        : document.getRejectionReason()));
-
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .status(HttpStatus.NOT_FOUND)
-                                        .body(Map.of(
-                                                        "message",
-                                                        e.getMessage()));
-                }
+    @PostMapping("/resubmit")
+    public ResponseEntity<?> resubmitDocument(
+            @RequestParam Long previousDocumentId,
+            @RequestParam MultipartFile file,
+            Authentication authentication) {
+        try {
+            Document previous = documentService.getDocumentById(previousDocumentId);
+            User user = currentUser(authentication);
+            if (user.getRole() != Role.USER || !user.getId().equals(previous.getUser().getId()))
+                return forbidden();
+            Document document = documentService.resubmitDocument(previousDocumentId, file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "message", "Document resubmitted successfully",
+                    "documentId", document.getId(),
+                    "previousDocumentId", document.getPreviousDocument().getId(),
+                    "documentType", document.getDocumentType().name(),
+                    "status", document.getStatus().name(),
+                    "fileName", document.getOriginalFileName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
 
-        // ============================================================
-        // RESUBMIT DOCUMENT
-        // ============================================================
-
-        @PostMapping("/resubmit")
-        public ResponseEntity<?> resubmitDocument(
-                        @RequestParam Long previousDocumentId,
-                        @RequestParam MultipartFile file) {
-
-                try {
-
-                        Document document = documentService.resubmitDocument(
-                                        previousDocumentId,
-                                        file);
-
-                        return ResponseEntity
-                                        .status(HttpStatus.CREATED)
-                                        .body(Map.of(
-                                                        "message",
-                                                        "Document resubmitted successfully",
-
-                                                        "documentId",
-                                                        document.getId(),
-
-                                                        "previousDocumentId",
-                                                        document.getPreviousDocument().getId(),
-
-                                                        "documentType",
-                                                        document.getDocumentType().name(),
-
-                                                        "status",
-                                                        document.getStatus().name(),
-
-                                                        "fileName",
-                                                        document.getOriginalFileName()));
-
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .badRequest()
-                                        .body(Map.of(
-                                                        "message",
-                                                        e.getMessage()));
-                }
+    @GetMapping("/{documentId}/history")
+    public ResponseEntity<?> getDocumentHistory(@PathVariable Long documentId, Authentication authentication) {
+        try {
+            Document document = documentService.getDocumentById(documentId);
+            if (!canAccessDocument(authentication, document))
+                return forbidden();
+            List<DocumentHistoryResponse> history = documentService.getDocumentHistory(documentId);
+            return ResponseEntity.ok(history);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         }
+    }
 
-        // ============================================================
-        // GET DOCUMENT HISTORY
-        // ============================================================
-
-        @GetMapping("/{documentId}/history")
-        public ResponseEntity<?> getDocumentHistory(
-                        @PathVariable Long documentId) {
-
-                try {
-
-                        List<DocumentHistoryResponse> history = documentService.getDocumentHistory(
-                                        documentId);
-
-                        return ResponseEntity.ok(history);
-
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .status(HttpStatus.NOT_FOUND)
-                                        .body(Map.of(
-                                                        "message",
-                                                        e.getMessage()));
-                }
+    @GetMapping("/{documentId}/download")
+    public ResponseEntity<?> downloadDocument(@PathVariable Long documentId, Authentication authentication) {
+        try {
+            Document document = documentService.getDocumentById(documentId);
+            if (!canAccessDocument(authentication, document))
+                return forbidden();
+            Resource resource = documentService.downloadDocument(documentId);
+            return ResponseEntity.ok()
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + document.getOriginalFileName().replace("\"", "") + "\"")
+                    .body(resource);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
 
-        // ============================================================
-        // DOWNLOAD VERIFIED DOCUMENT
-        // ============================================================
+    private User currentUser(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+    }
 
-        @GetMapping("/{documentId}/download")
-        public ResponseEntity<?> downloadDocument(
-                        @PathVariable Long documentId) {
+    private boolean canAccessDocument(Authentication authentication, Document document) {
+        User user = currentUser(authentication);
+        return user.getRole() != Role.USER || user.getId().equals(document.getUser().getId());
+    }
 
-                try {
-
-                        Document document = documentService.getDocumentById(documentId);
-
-                        Resource resource = documentService.downloadDocument(documentId);
-
-                        return ResponseEntity.ok()
-                                        .header(
-                                                        HttpHeaders.CONTENT_DISPOSITION,
-                                                        "attachment; filename=\"" +
-                                                                        document.getOriginalFileName() +
-                                                                        "\"")
-                                        .header(
-                                                        HttpHeaders.CONTENT_TYPE,
-                                                        "application/octet-stream")
-                                        .body(resource);
-
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .badRequest()
-                                        .body(Map.of(
-                                                        "message",
-                                                        e.getMessage()));
-                }
-        }
+    private ResponseEntity<Map<String, String>> forbidden() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", "You are not allowed to access this document"));
+    }
 }

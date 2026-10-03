@@ -69,6 +69,10 @@ public class DocumentService {
 
                 String originalFileName = file.getOriginalFilename();
 
+                if (originalFileName != null) {
+                        originalFileName = java.nio.file.Paths.get(originalFileName).getFileName().toString();
+                }
+
                 if (originalFileName == null || originalFileName.isBlank()) {
                         throw new RuntimeException("Invalid file name");
                 }
@@ -159,6 +163,10 @@ public class DocumentService {
                 }
 
                 String originalFileName = file.getOriginalFilename();
+
+                if (originalFileName != null) {
+                        originalFileName = java.nio.file.Paths.get(originalFileName).getFileName().toString();
+                }
 
                 if (originalFileName == null
                                 || originalFileName.isBlank()) {

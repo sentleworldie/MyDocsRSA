@@ -18,6 +18,10 @@ public class EmailTestController {
     @GetMapping("/api/test-email")
     public String testEmail(@RequestParam String recipient) {
 
+        if (recipient == null || recipient.isBlank() || !recipient.contains("@")) {
+            throw new IllegalArgumentException("A valid recipient email is required");
+        }
+
         emailService.sendTestEmail(recipient);
 
         return "Test email sent successfully";
