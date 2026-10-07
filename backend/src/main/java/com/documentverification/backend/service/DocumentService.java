@@ -24,19 +24,29 @@ import com.documentverification.backend.entity.ProcessingPath;
 import com.documentverification.backend.entity.User;
 import com.documentverification.backend.entity.VerificationStatus;
 import com.documentverification.backend.repository.DocumentRepository;
+import com.documentverification.backend.repository.CertificationRequestRepository;
+import com.documentverification.backend.repository.DigitalCredentialRepository;
 import com.documentverification.backend.repository.UserRepository;
 
 @Service
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
+    private final CertificationRequestRepository certificationRequestRepository;
+    private final DigitalCredentialRepository digitalCredentialRepository;
     private final DocumentValidationService documentValidationService;
     private final Path uploadDirectory = Paths.get("document-storage").toAbsolutePath().normalize();
 
-    public DocumentService(DocumentRepository documentRepository, UserRepository userRepository,
-                           DocumentValidationService documentValidationService) {
+    public DocumentService(
+            DocumentRepository documentRepository,
+            UserRepository userRepository,
+            CertificationRequestRepository certificationRequestRepository,
+            DigitalCredentialRepository digitalCredentialRepository,
+            DocumentValidationService documentValidationService) {
         this.documentRepository = documentRepository;
         this.userRepository = userRepository;
+        this.certificationRequestRepository = certificationRequestRepository;
+        this.digitalCredentialRepository = digitalCredentialRepository;
         this.documentValidationService = documentValidationService;
         try { Files.createDirectories(uploadDirectory); }
         catch (IOException e) { throw new RuntimeException("Could not create document storage directory", e); }
@@ -116,6 +126,55 @@ public class DocumentService {
             if (!resource.exists() || !resource.isReadable()) throw new RuntimeException("Document file is not available");
             return resource;
         } catch (IOException e) { throw new RuntimeException("Could not read document", e); }
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteDocumentForUser(Long documentId, Long userId) {
+        Document document = getDocumentById(documentId);
+
+        if (!document.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to delete this document");
+        }
+
+        if (document.getStatus() == VerificationStatus.UNDER_REVIEW
+                || document.getStatus() == VerificationStatus.APPROVED) {
+            throw new RuntimeException(
+                    "Documents under review or approved documents cannot be permanently deleted"
+            );
+        }
+
+        if (documentRepository.existsByPreviousDocument(document)) {
+            throw new RuntimeException(
+                    "This document has a resubmission linked to it and cannot be deleted"
+            );
+        }
+
+        // Remove records that reference this document before deleting the document.
+        digitalCredentialRepository.deleteByDocument(document);
+        certificationRequestRepository.deleteByDocument(document);
+
+        deleteStoredFile(document);
+        documentRepository.delete(document);
+    }
+
+    private void deleteStoredFile(Document document) {
+        if (document.getFilePath() == null || document.getFilePath().isBlank()) {
+            return;
+        }
+
+        try {
+            Path path = Paths.get(document.getFilePath()).toAbsolutePath().normalize();
+
+            if (!path.startsWith(uploadDirectory)) {
+                throw new RuntimeException("Invalid document path");
+            }
+
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Could not delete document file", e);
+        }
     }
 
     public List<DocumentHistoryResponse> getDocumentHistory(Long documentId) {

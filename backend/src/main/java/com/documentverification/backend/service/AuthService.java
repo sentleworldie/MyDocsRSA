@@ -1,5 +1,7 @@
 package com.documentverification.backend.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -7,6 +9,10 @@ import com.documentverification.backend.dto.RegisterRequest;
 import com.documentverification.backend.entity.Role;
 import com.documentverification.backend.entity.User;
 import com.documentverification.backend.repository.UserRepository;
+import com.documentverification.backend.repository.DocumentRepository;
+import com.documentverification.backend.repository.CertificationRequestRepository;
+import com.documentverification.backend.repository.DigitalCredentialRepository;
+import com.documentverification.backend.entity.Document;
 import com.documentverification.backend.security.JwtService;
 
 @Service
@@ -15,15 +21,27 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
+    private final DocumentRepository documentRepository;
+    private final CertificationRequestRepository certificationRequestRepository;
+    private final DigitalCredentialRepository digitalCredentialRepository;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            JwtService jwtService,
+            EmailService emailService,
+            DocumentRepository documentRepository,
+            CertificationRequestRepository certificationRequestRepository,
+            DigitalCredentialRepository digitalCredentialRepository) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.emailService = emailService;
+        this.documentRepository = documentRepository;
+        this.certificationRequestRepository = certificationRequestRepository;
+        this.digitalCredentialRepository = digitalCredentialRepository;
     }
 
     public User register(RegisterRequest request) {
@@ -43,7 +61,19 @@ public class AuthService {
         user.setRole(Role.USER);
         user.setActive(true);
 
-        return userRepository.save(user);
+        // Save the user
+        User savedUser = userRepository.save(user);
+
+        // Send welcome email
+        try {
+            emailService.sendWelcomeEmail(
+                    savedUser.getEmail(),
+                    savedUser.getFullName());
+        } catch (Exception e) {
+            System.err.println("Could not send welcome email: " + e.getMessage());
+        }
+
+        return savedUser;
     }
 
     public User login(String email, String password) {
@@ -60,6 +90,77 @@ public class AuthService {
         }
 
         return user;
+    }
+
+    public User getCurrentUser(String email) {
+        return userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+    }
+
+    public User updateCurrentUser(String email, String fullName, String phoneNumber, String password) {
+        User user = getCurrentUser(email);
+
+        if (fullName != null && !fullName.isBlank()) {
+            user.setFullName(fullName.trim());
+        }
+
+        if (phoneNumber != null) {
+            user.setPhoneNumber(phoneNumber.trim());
+        }
+
+        if (password != null && !password.isBlank()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+
+        return userRepository.save(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteCurrentUser(String email) {
+        User user = getCurrentUser(email);
+
+        // Remove dependent records first so foreign-key constraints are respected.
+        digitalCredentialRepository.deleteByUser(user);
+        certificationRequestRepository.deleteByUser(user);
+
+        // Delete newest documents first. This protects the previousDocument
+        // relationship used by resubmissions.
+        List<Document> documents = new java.util.ArrayList<>(documentRepository.findByUser(user));
+        documents.sort(java.util.Comparator.comparing(
+                Document::getUploadedAt,
+                java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())
+        ).reversed());
+
+        for (Document document : documents) {
+            if (documentRepository.existsByPreviousDocument(document)) {
+                throw new RuntimeException(
+                        "This account contains a document history that could not be safely deleted"
+                );
+            }
+            deletePhysicalFile(document);
+            documentRepository.delete(document);
+        }
+
+        userRepository.delete(user);
+    }
+
+    private void deletePhysicalFile(Document document) {
+        if (document.getFilePath() == null || document.getFilePath().isBlank()) {
+            return;
+        }
+
+        try {
+            java.nio.file.Path path = java.nio.file.Paths
+                    .get(document.getFilePath())
+                    .toAbsolutePath()
+                    .normalize();
+
+            if (java.nio.file.Files.exists(path)) {
+                java.nio.file.Files.delete(path);
+            }
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Could not delete stored document file", e);
+        }
     }
 
     public String createToken(User user) {

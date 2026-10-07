@@ -18,4 +18,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             User user,
             VerificationStatus status
     );
+
+    boolean existsByPreviousDocument(Document document);
 }

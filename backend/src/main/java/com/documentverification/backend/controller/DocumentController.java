@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -103,6 +104,33 @@ public class DocumentController {
                     "fileName", document.getOriginalFileName()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<?> deleteDocument(
+            @PathVariable Long documentId,
+            Authentication authentication) {
+
+        try {
+            User user = currentUser(authentication);
+
+            if (user.getRole() != Role.USER) {
+                return forbidden();
+            }
+
+            documentService.deleteDocumentForUser(
+                    documentId,
+                    user.getId()
+            );
+
+            return ResponseEntity.ok(
+                    Map.of("message", "Document deleted successfully")
+            );
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 

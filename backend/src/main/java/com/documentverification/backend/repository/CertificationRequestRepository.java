@@ -11,4 +11,8 @@ import com.documentverification.backend.entity.User;
 public interface CertificationRequestRepository extends JpaRepository<CertificationRequest, Long> {
     List<CertificationRequest> findByUserOrderByCreatedAtDesc(User user);
     List<CertificationRequest> findByStatusOrderByCreatedAtAsc(CertificationRequestStatus status);
+
+    void deleteByUser(User user);
+
+    void deleteByDocument(com.documentverification.backend.entity.Document document);
 }

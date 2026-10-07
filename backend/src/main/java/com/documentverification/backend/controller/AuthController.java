@@ -4,13 +4,18 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.documentverification.backend.dto.LoginRequest;
 import com.documentverification.backend.dto.RegisterRequest;
+import com.documentverification.backend.dto.UpdateAccountRequest;
 import com.documentverification.backend.entity.User;
 import com.documentverification.backend.service.AuthService;
 
@@ -50,6 +55,66 @@ public class AuthController {
                     ));
         }
     } // <-- Added missing closing brace for the register method
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        try {
+            User user = authService.getCurrentUser(authentication.getName());
+
+            return ResponseEntity.ok(Map.of(
+                    "userId", user.getId(),
+                    "fullName", user.getFullName(),
+                    "email", user.getEmail(),
+                    "phoneNumber", user.getPhoneNumber() == null ? "" : user.getPhoneNumber(),
+                    "role", user.getRole().name(),
+                    "active", user.getActive()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateCurrentUser(
+            @Valid @RequestBody UpdateAccountRequest request,
+            Authentication authentication) {
+
+        try {
+            User user = authService.updateCurrentUser(
+                    authentication.getName(),
+                    request.getFullName(),
+                    request.getPhoneNumber(),
+                    request.getPassword()
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Account updated successfully",
+                    "userId", user.getId(),
+                    "fullName", user.getFullName(),
+                    "email", user.getEmail(),
+                    "phoneNumber", user.getPhoneNumber() == null ? "" : user.getPhoneNumber(),
+                    "role", user.getRole().name()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deleteCurrentUser(Authentication authentication) {
+        try {
+            authService.deleteCurrentUser(authentication.getName());
+
+            return ResponseEntity.ok(
+                    Map.of("message", "Account deleted successfully")
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {

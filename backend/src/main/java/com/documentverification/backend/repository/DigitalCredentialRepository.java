@@ -15,4 +15,8 @@ public interface DigitalCredentialRepository extends JpaRepository<DigitalCreden
     Optional<DigitalCredential> findByDocument(Document document);
     List<DigitalCredential> findByUserOrderByIssuedAtDesc(User user);
     List<DigitalCredential> findByUserAndStatusOrderByIssuedAtDesc(User user, CredentialStatus status);
+
+    void deleteByUser(User user);
+
+    void deleteByDocument(Document document);
 }

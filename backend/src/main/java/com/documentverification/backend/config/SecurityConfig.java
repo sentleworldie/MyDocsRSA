@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/api/test-email").hasRole("ADMIN")
                         .requestMatchers("/api/verification/**", "/api/certification/requests/pending", "/api/certification/requests/*/review", "/api/certification/requests/*/approve", "/api/certification/requests/*/reject", "/api/certification/requests/*/more-information", "/api/certification/verify/**").hasAnyRole("ADMIN", "POLICE_OFFICER")
                         .requestMatchers("/api/documents/upload", "/api/documents/resubmit", "/api/certification/requests", "/api/certification/requests/me", "/api/certification/credentials/me", "/api/certification/credentials/*", "/api/credentials/*/request").hasRole("USER")

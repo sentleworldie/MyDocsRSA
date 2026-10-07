@@ -31,6 +31,27 @@ public class EmailService {
                                                              MyDocs RSA""");
     }
 
+    public void sendWelcomeEmail(String recipientEmail, String recipientName) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setFrom("mydocsrsa@gmail.com");
+        message.setTo(recipientEmail);
+        message.setSubject("Welcome to MyDocs RSA");
+
+        message.setText(
+                "Hello " + recipientName + ",\n\n" +
+                "Welcome to MyDocs RSA!\n\n" +
+                "Your account has been successfully created.\n\n" +
+                "You can now log in to MyDocs RSA and submit your documents " +
+                "for digital certification.\n\n" +
+                "Thank you for using MyDocs RSA.\n\n" +
+                "MyDocs RSA Team"
+        );
+
+        mailSender.send(message);
+    }
+    
     public void sendDocumentStatusEmail(
             String recipient,
             String subject,
