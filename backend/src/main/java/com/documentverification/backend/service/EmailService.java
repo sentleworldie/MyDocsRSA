@@ -13,9 +13,24 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
+
+    /**
+
+
+     * Sends a simple test message used to confirm that the project's Gmail SMTP settings work.
+
+
+     */
+
 
     public void sendTestEmail(String recipient) {
 
@@ -30,6 +45,15 @@ public class EmailService {
                                                              Regards,
                                                              MyDocs RSA""");
     }
+
+    /**
+
+
+     * Sends a welcome message after a new MyDocs RSA account is successfully registered.
+
+
+     */
+
 
     public void sendWelcomeEmail(String recipientEmail, String recipientName) {
 
@@ -52,6 +76,15 @@ public class EmailService {
         mailSender.send(message);
     }
     
+    /**
+
+    
+     * Sends the user an email when police verification changes the status of their document.
+
+    
+     */
+
+    
     public void sendDocumentStatusEmail(
             String recipient,
             String subject,
@@ -59,6 +92,15 @@ public class EmailService {
 
         sendEmail(recipient, subject, messageText);
     }
+
+    /**
+
+
+     * Contains the shared SMTP sending logic used by the different MyDocs RSA email notifications.
+
+
+     */
+
 
     private void sendEmail(
             String recipient,

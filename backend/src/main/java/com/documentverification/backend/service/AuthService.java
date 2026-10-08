@@ -26,6 +26,12 @@ public class AuthService {
     private final CertificationRequestRepository certificationRequestRepository;
     private final DigitalCredentialRepository digitalCredentialRepository;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -43,6 +49,15 @@ public class AuthService {
         this.certificationRequestRepository = certificationRequestRepository;
         this.digitalCredentialRepository = digitalCredentialRepository;
     }
+
+    /**
+
+
+     * Creates a normal USER account, securely hashes its password, saves it in the users table and sends the new user a MyDocs RSA welcome email.
+
+
+     */
+
 
     public User register(RegisterRequest request) {
 
@@ -76,6 +91,15 @@ public class AuthService {
         return savedUser;
     }
 
+    /**
+
+
+     * Authenticates an existing MyDocs RSA account by email and password and rejects inactive or invalid accounts.
+
+
+     */
+
+
     public User login(String email, String password) {
 
         User user = userRepository.findByEmail(email.trim().toLowerCase())
@@ -92,10 +116,28 @@ public class AuthService {
         return user;
     }
 
+    /**
+
+
+     * Finds the account represented by the email extracted from the authenticated JWT.
+
+
+     */
+
+
     public User getCurrentUser(String email) {
         return userRepository.findByEmail(email.trim().toLowerCase())
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
+
+    /**
+
+
+     * Updates the logged-in user's editable profile information and re-hashes the password when a new password is supplied.
+
+
+     */
+
 
     public User updateCurrentUser(String email, String fullName, String phoneNumber, String password) {
         User user = getCurrentUser(email);
@@ -116,6 +158,12 @@ public class AuthService {
     }
 
     @org.springframework.transaction.annotation.Transactional
+    /**
+
+     * Permanently removes the logged-in account and its credentials, certification requests, documents and stored files while respecting database relationships.
+
+     */
+
     public void deleteCurrentUser(String email) {
         User user = getCurrentUser(email);
 
@@ -144,6 +192,15 @@ public class AuthService {
         userRepository.delete(user);
     }
 
+    /**
+
+
+     * Deletes the physical uploaded document from the document-storage folder during account deletion.
+
+
+     */
+
+
     private void deletePhysicalFile(Document document) {
         if (document.getFilePath() == null || document.getFilePath().isBlank()) {
             return;
@@ -162,6 +219,15 @@ public class AuthService {
             throw new RuntimeException("Could not delete stored document file", e);
         }
     }
+
+    /**
+
+
+     * Creates the JWT returned to the MyDocs RSA app after successful registration or login.
+
+
+     */
+
 
     public String createToken(User user) {
         return jwtService.generateToken(user);

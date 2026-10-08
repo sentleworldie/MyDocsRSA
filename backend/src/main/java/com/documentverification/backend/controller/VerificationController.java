@@ -23,6 +23,12 @@ public class VerificationController {
 
     private final VerificationService verificationService;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public VerificationController(
             VerificationService verificationService) {
 
@@ -34,6 +40,12 @@ public class VerificationController {
     // ============================================================
 
     @GetMapping("/pending")
+    /**
+
+     * Returns documents currently waiting for a police officer to review.
+
+     */
+
     public ResponseEntity<?> getPendingDocuments() {
 
         try {
@@ -59,6 +71,12 @@ public class VerificationController {
     // ============================================================
 
     @PutMapping("/{documentId}/review")
+    /**
+
+     * Marks a pending document as under review when a police officer begins checking its authenticity.
+
+     */
+
     public ResponseEntity<?> startReview(
             @PathVariable Long documentId) {
 
@@ -94,6 +112,12 @@ public class VerificationController {
     // ============================================================
 
     @PutMapping("/{documentId}/approve")
+    /**
+
+     * Approves a document after police verification and triggers creation of the associated digital credential and notification.
+
+     */
+
     public ResponseEntity<?> approveDocument(
             @PathVariable Long documentId) {
 
@@ -129,6 +153,12 @@ public class VerificationController {
     // ============================================================
 
     @PutMapping("/{documentId}/reject")
+    /**
+
+     * Rejects a document and stores the officer's reason so the user can see why verification failed.
+
+     */
+
     public ResponseEntity<?> rejectDocument(
             @PathVariable Long documentId,
             @Valid @RequestBody ReviewRequest request) {
@@ -170,6 +200,12 @@ public class VerificationController {
     // ============================================================
 
     @PutMapping("/{documentId}/resubmission")
+    /**
+
+     * Requests another copy of the document when the officer needs the user to correct or replace the submission.
+
+     */
+
     public ResponseEntity<?> requestResubmission(
             @PathVariable Long documentId,
             @Valid @RequestBody ReviewRequest request) {

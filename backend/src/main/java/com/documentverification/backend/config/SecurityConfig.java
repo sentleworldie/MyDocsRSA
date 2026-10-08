@@ -15,11 +15,23 @@ import com.documentverification.backend.security.JwtAuthenticationFilter;
 public class SecurityConfig {
 
     @Bean
+    /**
+
+     * Creates the BCrypt password encoder used to protect MyDocs RSA user passwords in the database.
+
+     */
+
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
+    /**
+
+     * Configures which MyDocs RSA API routes are public, which require JWT authentication and which roles can access protected police/admin operations.
+
+     */
+
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {

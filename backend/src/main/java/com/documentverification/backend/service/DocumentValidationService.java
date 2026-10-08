@@ -14,6 +14,15 @@ public class DocumentValidationService {
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+    /**
+
+
+     * Checks a newly uploaded MyDocs RSA document before it is stored, including file presence, size and allowed file type/content rules.
+
+
+     */
+
+
     public void validateUpload(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
@@ -54,6 +63,15 @@ public class DocumentValidationService {
 
         validateFileContent(file, extension);
     }
+
+    /**
+
+
+     * Checks a document already saved on disk to make sure the stored file still satisfies the backend validation rules.
+
+
+     */
+
 
     public void validateStoredFile(String filePath) {
 
@@ -103,6 +121,12 @@ public class DocumentValidationService {
     }
 
     @SuppressWarnings("ConvertToStringSwitch")
+    /**
+
+     * Performs the content-level checks used to reject files that do not match the expected document format.
+
+     */
+
     private void validateFileContent(
             MultipartFile file,
             String extension) {
@@ -173,6 +197,15 @@ public class DocumentValidationService {
             );
         }
     }
+
+    /**
+
+
+     * Extracts the file extension used by the MyDocs RSA upload validation rules.
+
+
+     */
+
 
     private String getExtension(String fileName) {
 

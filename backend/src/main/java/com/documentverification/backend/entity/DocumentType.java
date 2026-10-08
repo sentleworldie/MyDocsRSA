@@ -1,5 +1,8 @@
 package com.documentverification.backend.entity;
 
+/**
+ * Lists the document categories that users can submit to MyDocs RSA for verification.
+ */
 public enum DocumentType {
 
     ID_DOCUMENT,

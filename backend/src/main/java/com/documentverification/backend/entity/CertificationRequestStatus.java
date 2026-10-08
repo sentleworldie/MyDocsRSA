@@ -1,5 +1,8 @@
 package com.documentverification.backend.entity;
 
+/**
+ * Represents the stages of a MyDocs RSA certification request from submission through final decision.
+ */
 public enum CertificationRequestStatus {
     SUBMITTED,
     UNDER_REVIEW,

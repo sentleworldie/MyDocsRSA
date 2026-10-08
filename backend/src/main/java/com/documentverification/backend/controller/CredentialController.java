@@ -21,13 +21,26 @@ public class CredentialController {
     private final CertificationService certificationService;
     private final UserRepository userRepository;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public CredentialController(CertificationService certificationService, UserRepository userRepository) {
         this.certificationService = certificationService;
         this.userRepository = userRepository;
     }
 
-    /** Returns an existing credential without creating a new verification request. */
-    @PostMapping("/{credentialId}/request")
+    /**
+
+
+     * Requests an existing credential for the authenticated user instead of creating a duplicate certification record.
+
+
+     */
+
+
     public ResponseEntity<?> requestExisting(@PathVariable Long credentialId, Authentication authentication) {
         try {
             User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Authenticated user not found"));

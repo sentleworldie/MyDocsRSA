@@ -23,6 +23,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public JwtAuthenticationFilter(
             JwtService jwtService,
             UserDetailsServiceImpl userDetailsService) {
@@ -31,6 +37,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    /**
+
+     * Reads the Bearer token from the request, validates it and places the authenticated MyDocs RSA user into Spring Security when the token is valid.
+
+     */
+
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,

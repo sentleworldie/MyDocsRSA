@@ -27,11 +27,23 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
     @PostMapping("/register")
+    /**
+
+     * Registers a new MyDocs RSA user, returns the new user details and JWT, and triggers the welcome-email workflow.
+
+     */
+
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
             User user = authService.register(request);
@@ -57,6 +69,12 @@ public class AuthController {
     } // <-- Added missing closing brace for the register method
 
     @GetMapping("/me")
+    /**
+
+     * Returns the account details belonging to the user identified by the JWT used for this request.
+
+     */
+
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         try {
             User user = authService.getCurrentUser(authentication.getName());
@@ -76,6 +94,12 @@ public class AuthController {
     }
 
     @PutMapping("/me")
+    /**
+
+     * Updates the logged-in MyDocs RSA user's profile details, including name, phone number and optional password.
+
+     */
+
     public ResponseEntity<?> updateCurrentUser(
             @Valid @RequestBody UpdateAccountRequest request,
             Authentication authentication) {
@@ -103,6 +127,12 @@ public class AuthController {
     }
 
     @DeleteMapping("/me")
+    /**
+
+     * Permanently deletes the logged-in user account and its related MyDocs RSA data after the account-deletion checks are performed.
+
+     */
+
     public ResponseEntity<?> deleteCurrentUser(Authentication authentication) {
         try {
             authService.deleteCurrentUser(authentication.getName());
@@ -117,6 +147,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    /**
+
+     * Checks the supplied MyDocs RSA email and password and returns a JWT when the account is valid and active.
+
+     */
+
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
             User user = authService.login(

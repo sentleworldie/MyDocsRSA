@@ -19,6 +19,9 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "digital_credentials")
+/**
+ * Represents the digital credential issued after a MyDocs RSA document has successfully passed verification.
+ */
 public class DigitalCredential {
 
     @Id
@@ -57,72 +60,231 @@ public class DigitalCredential {
     @Column(name = "revocation_reason", length = 500)
     private String revocationReason;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public DigitalCredential() {
     }
+
+    /**
+
+
+     * Returns the database ID. 
+
+
+     */
+
 
     public Long getId() {
         return id;
     }
 
+    /**
+
+
+     * Returns the MyDocs RSA user who owns the record. 
+
+
+     */
+
+
     public User getUser() {
         return user;
     }
+
+    /**
+
+
+     * Sets the MyDocs RSA user who owns the record on this object.
+
+
+     */
+
 
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+
+
+     * Returns the document linked to this record. 
+
+
+     */
+
+
     public Document getDocument() {
         return document;
     }
+
+    /**
+
+
+     * Sets the document linked to this record on this object.
+
+
+     */
+
 
     public void setDocument(Document document) {
         this.document = document;
     }
 
+    /**
+
+
+     * Returns the credential verification code. 
+
+
+     */
+
+
     public String getVerificationCode() {
         return verificationCode;
     }
+
+    /**
+
+
+     * Sets the credential verification code on this object.
+
+
+     */
+
 
     public void setVerificationCode(String verificationCode) {
         this.verificationCode = verificationCode;
     }
 
+    /**
+
+
+     * Returns the current verification or credential status. 
+
+
+     */
+
+
     public CredentialStatus getStatus() {
         return status;
     }
+
+    /**
+
+
+     * Sets the current verification or credential status on this object.
+
+
+     */
+
 
     public void setStatus(CredentialStatus status) {
         this.status = status;
     }
 
+    /**
+
+
+     * Returns when the digital credential was issued. 
+
+
+     */
+
+
     public LocalDateTime getIssuedAt() {
         return issuedAt;
     }
+
+    /**
+
+
+     * Sets when the digital credential was issued on this object.
+
+
+     */
+
 
     public void setIssuedAt(LocalDateTime issuedAt) {
         this.issuedAt = issuedAt;
     }
 
+    /**
+
+
+     * Returns when the digital credential stops being valid. 
+
+
+     */
+
+
     public LocalDateTime getValidUntil() {
         return validUntil;
     }
+
+    /**
+
+
+     * Sets when the digital credential stops being valid on this object.
+
+
+     */
+
 
     public void setValidUntil(LocalDateTime validUntil) {
         this.validUntil = validUntil;
     }
 
+    /**
+
+
+     * Returns when the credential was revoked. 
+
+
+     */
+
+
     public LocalDateTime getRevokedAt() {
         return revokedAt;
     }
+
+    /**
+
+
+     * Sets when the credential was revoked on this object.
+
+
+     */
+
 
     public void setRevokedAt(LocalDateTime revokedAt) {
         this.revokedAt = revokedAt;
     }
 
+    /**
+
+
+     * Returns why the credential was revoked. 
+
+
+     */
+
+
     public String getRevocationReason() {
         return revocationReason;
     }
+
+    /**
+
+
+     * Sets why the credential was revoked on this object.
+
+
+     */
+
 
     public void setRevocationReason(String revocationReason) {
         this.revocationReason = revocationReason;

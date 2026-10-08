@@ -14,11 +14,23 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
+    /**
+
+     * Loads a MyDocs RSA account by email so Spring Security can authenticate requests and apply its role.
+
+     */
+
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

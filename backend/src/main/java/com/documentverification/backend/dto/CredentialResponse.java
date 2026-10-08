@@ -4,6 +4,18 @@ import java.time.LocalDateTime;
 
 import com.documentverification.backend.entity.DigitalCredential;
 
+/**
+
+
+ * Creates the CredentialResponse object used by the MyDocs RSA backend.
+
+
+ */
+
+
+/**
+ * Represents the digital credential information returned to the MyDocs RSA client for the user's wallet or verification screen.
+ */
 public record CredentialResponse(
         Long credentialId,
         Long documentId,
@@ -12,6 +24,12 @@ public record CredentialResponse(
         String verificationCode,
         LocalDateTime issuedAt,
         LocalDateTime validUntil) {
+    /**
+
+     * Handles the from operation used by the MyDocs RSA backend.
+
+     */
+
     public static CredentialResponse from(DigitalCredential c) {
         String status = c.getStatus().name();
         if (c.getValidUntil() != null && c.getValidUntil().isBefore(LocalDateTime.now()) && "ACTIVE".equals(status)) {

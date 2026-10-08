@@ -26,6 +26,12 @@ public class VerificationService {
     private final DigitalCredentialRepository digitalCredentialRepository;
     private final EmailService emailService;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public VerificationService(
             DocumentRepository documentRepository,
             DigitalCredentialRepository digitalCredentialRepository,
@@ -40,6 +46,15 @@ public class VerificationService {
     // GET PENDING DOCUMENTS
     // ============================================================
 
+    /**
+
+
+     * Finds documents in the PENDING state so police officers can see submissions that have not yet been reviewed.
+
+
+     */
+
+
     public List<Document> getPendingDocuments() {
 
         return documentRepository.findByStatus(
@@ -50,6 +65,15 @@ public class VerificationService {
     // ============================================================
     // START REVIEW
     // ============================================================
+
+    /**
+
+
+     * Moves a pending document to UNDER_REVIEW when a police officer begins authenticity checking.
+
+
+     */
+
 
     public Document startReview(Long documentId) {
 
@@ -72,6 +96,12 @@ public class VerificationService {
     // ============================================================
 
     @Transactional
+    /**
+
+     * Marks the document as APPROVED and creates a six-month digital credential when one does not already exist.
+
+     */
+
     public Document approveDocument(Long documentId) {
 
         Document document = getDocument(documentId);
@@ -164,6 +194,15 @@ public class VerificationService {
     // REJECT DOCUMENT
     // ============================================================
 
+    /**
+
+
+     * Marks the document as REJECTED, stores the officer reason and notifies the user of the outcome.
+
+
+     */
+
+
     public Document rejectDocument(
             Long documentId,
             String reason) {
@@ -212,6 +251,15 @@ public class VerificationService {
     // ============================================================
     // REQUEST RESUBMISSION
     // ============================================================
+
+    /**
+
+
+     * Marks the document as RESUBMISSION_REQUIRED when the officer needs the user to provide a corrected or clearer copy.
+
+
+     */
+
 
     public Document requestResubmission(
             Long documentId,
@@ -265,6 +313,15 @@ public class VerificationService {
     // SEND NOTIFICATION
     // ============================================================
 
+    /**
+
+
+     * Sends a MyDocs RSA email to the document owner describing the latest police verification result.
+
+
+     */
+
+
     private void sendNotification(
             Document document,
             String subject,
@@ -298,6 +355,15 @@ public class VerificationService {
     // ============================================================
     // FIND DOCUMENT
     // ============================================================
+
+    /**
+
+
+     * Loads a document by ID or stops the verification operation when that document does not exist.
+
+
+     */
+
 
     private Document getDocument(Long documentId) {
 

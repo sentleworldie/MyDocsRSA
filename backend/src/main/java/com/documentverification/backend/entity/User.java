@@ -14,6 +14,9 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
+/**
+ * Represents a MyDocs RSA account. The role controls whether the account is a normal user, police officer or administrator.
+ */
 public class User {
 
     @Id
@@ -42,75 +45,228 @@ public class User {
     @Column(nullable = false)
     private Boolean active = true;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public User() {
     }
+
+    /**
+
+
+     * Returns the database ID. 
+
+
+     */
+
 
     public Long getId() {
         return id;
     }
 
+    /**
+
+
+     * Sets the database ID on this object.
+
+
+     */
+
+
     public void setId(Long id) {
         this.id = id;
     }
+
+    /**
+
+
+     * Returns the user's full name. 
+
+
+     */
+
 
     public String getFullName() {
         return fullName;
     }
 
+    /**
+
+
+     * Sets the user's full name on this object.
+
+
+     */
+
+
     public void setFullName(String fullName) {
         this.fullName = fullName;
     }
+
+    /**
+
+
+     * Returns the account email address. 
+
+
+     */
+
 
     public String getEmail() {
         return email;
     }
 
+    /**
+
+
+     * Sets the account email address on this object.
+
+
+     */
+
+
     public void setEmail(String email) {
         this.email = email;
     }
+
+    /**
+
+
+     * Returns the user's encoded password. 
+
+
+     */
+
 
     public String getPassword() {
         return password;
     }
 
+    /**
+
+
+     * Sets the user's encoded password on this object.
+
+
+     */
+
+
     public void setPassword(String password) {
         this.password = password;
     }
+
+    /**
+
+
+     * Returns the account role used for MyDocs RSA access control. 
+
+
+     */
+
 
     public Role getRole() {
         return role;
     }
 
+    /**
+
+
+     * Sets the account role used for MyDocs RSA access control on this object.
+
+
+     */
+
+
     public void setRole(Role role) {
         this.role = role;
     }
+
+    /**
+
+
+     * Returns the user's phone number. 
+
+
+     */
+
 
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
+    /**
+
+
+     * Sets the user's phone number on this object.
+
+
+     */
+
+
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+
+    /**
+
+
+     * Returns the date and time the account was created. 
+
+
+     */
+
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     // Provided both getActive() and isActive() to prevent any method mismatch
+    /**
+
+     * Returns whether the account is active and allowed to log in. 
+
+     */
+
     public Boolean getActive() {
         return active != null && active;
     }
 
+    /**
+
+
+     * Returns whether whether the account is active and allowed to log in is true.
+
+
+     */
+
+
     public boolean isActive() {
         return active != null && active;
     }
+
+    /**
+
+
+     * Sets whether the account is active and allowed to log in on this object.
+
+
+     */
+
 
     public void setActive(Boolean active) {
         this.active = active;
     }
 
     @PrePersist
+    /**
+
+     * Handles the onCreate operation used by the MyDocs RSA backend.
+
+     */
+
     protected void onCreate() {
         createdAt = LocalDateTime.now();
 

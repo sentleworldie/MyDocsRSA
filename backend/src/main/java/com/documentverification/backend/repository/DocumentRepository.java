@@ -19,5 +19,11 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             VerificationStatus status
     );
 
+    /**
+
+     * Checks whether the specified MyDocs RSA document relationship already exists.
+
+     */
+
     boolean existsByPreviousDocument(Document document);
 }

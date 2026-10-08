@@ -33,12 +33,24 @@ public class DocumentController {
     private final DocumentService documentService;
     private final UserRepository userRepository;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public DocumentController(DocumentService documentService, UserRepository userRepository) {
         this.documentService = documentService;
         this.userRepository = userRepository;
     }
 
     @PostMapping("/upload")
+    /**
+
+     * Uploads a user document for verification and records whether the user supplied an existing police-certified copy.
+
+     */
+
     public ResponseEntity<?> uploadDocument(
             @RequestParam Long userId,
             @RequestParam DocumentType documentType,
@@ -62,6 +74,12 @@ public class DocumentController {
     }
 
     @GetMapping("/user/{userId}")
+    /**
+
+     * Returns the documents belonging to the requested user, while enforcing the access rules for the authenticated account.
+
+     */
+
     public ResponseEntity<?> getUserDocuments(@PathVariable Long userId, Authentication authentication) {
         try {
             User user = currentUser(authentication);
@@ -75,6 +93,12 @@ public class DocumentController {
     }
 
     @GetMapping("/{documentId}")
+    /**
+
+     * Returns one document when the authenticated user is allowed to access it.
+
+     */
+
     public ResponseEntity<?> getDocument(@PathVariable Long documentId, Authentication authentication) {
         try {
             Document document = documentService.getDocumentById(documentId);
@@ -86,6 +110,12 @@ public class DocumentController {
     }
 
     @PostMapping("/resubmit")
+    /**
+
+     * Uploads a replacement file for a document that the verification process has marked as requiring resubmission.
+
+     */
+
     public ResponseEntity<?> resubmitDocument(
             @RequestParam Long previousDocumentId,
             @RequestParam MultipartFile file,
@@ -108,6 +138,12 @@ public class DocumentController {
     }
 
     @DeleteMapping("/{documentId}")
+    /**
+
+     * Permanently deletes an eligible document owned by the authenticated user, including its stored file, without allowing deletion of protected verification records.
+
+     */
+
     public ResponseEntity<?> deleteDocument(
             @PathVariable Long documentId,
             Authentication authentication) {
@@ -135,6 +171,12 @@ public class DocumentController {
     }
 
     @GetMapping("/{documentId}/history")
+    /**
+
+     * Returns the resubmission history for a document so the user or authorised staff can see how the document moved through verification.
+
+     */
+
     public ResponseEntity<?> getDocumentHistory(@PathVariable Long documentId, Authentication authentication) {
         try {
             Document document = documentService.getDocumentById(documentId);
@@ -147,6 +189,12 @@ public class DocumentController {
     }
 
     @GetMapping("/{documentId}/download")
+    /**
+
+     * Downloads the stored original document after checking that the authenticated user is allowed to access it.
+
+     */
+
     public ResponseEntity<?> downloadDocument(@PathVariable Long documentId, Authentication authentication) {
         try {
             Document document = documentService.getDocumentById(documentId);
@@ -160,15 +208,42 @@ public class DocumentController {
         }
     }
 
+    /**
+
+
+     * Loads the currently authenticated MyDocs RSA user from the email stored in the JWT.
+
+
+     */
+
+
     private User currentUser(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
 
+    /**
+
+
+     * Checks document ownership and role rules before allowing a user, officer or administrator to access the document.
+
+
+     */
+
+
     private boolean canAccessDocument(Authentication authentication, Document document) {
         User user = currentUser(authentication);
         return user.getRole() != Role.USER || user.getId().equals(document.getUser().getId());
     }
+
+    /**
+
+
+     * Creates the standard forbidden response used when a caller does not have permission to access a document.
+
+
+     */
+
 
     private ResponseEntity<Map<String, String>> forbidden() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "You are not allowed to access this document"));

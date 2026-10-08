@@ -29,6 +29,15 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
+    /**
+
+
+     * Creates the JWT that the MyDocs RSA app uses to prove the user's identity on protected API requests.
+
+
+     */
+
+
     public String generateToken(User user) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
@@ -43,9 +52,27 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+
+
+     * Reads the user email stored in a MyDocs RSA JWT so the backend knows which account made the request.
+
+
+     */
+
+
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
     }
+
+    /**
+
+
+     * Checks that a JWT is correctly signed, has not expired and belongs to the expected user email.
+
+
+     */
+
 
     public boolean isValid(String token, String expectedEmail) {
         try {
@@ -56,6 +83,15 @@ public class JwtService {
             return false;
         }
     }
+
+    /**
+
+
+     * Parses the signed JWT and returns its claims for the authentication checks.
+
+
+     */
+
 
     private Claims parseClaims(String token) {
         return Jwts.parser()

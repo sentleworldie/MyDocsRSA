@@ -11,11 +11,23 @@ public class EmailTestController {
 
     private final EmailService emailService;
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public EmailTestController(EmailService emailService) {
         this.emailService = emailService;
     }
 
     @GetMapping("/api/test-email")
+    /**
+
+     * Sends a test message to the supplied address so the development team can verify the MyDocs RSA email configuration.
+
+     */
+
     public String testEmail(@RequestParam String recipient) {
 
         if (recipient == null || recipient.isBlank() || !recipient.contains("@")) {

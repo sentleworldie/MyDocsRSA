@@ -16,7 +16,19 @@ public interface DigitalCredentialRepository extends JpaRepository<DigitalCreden
     List<DigitalCredential> findByUserOrderByIssuedAtDesc(User user);
     List<DigitalCredential> findByUserAndStatusOrderByIssuedAtDesc(User user, CredentialStatus status);
 
+    /**
+
+     * Deletes the matching MyDocs RSA records using Spring Data JPA so related account data can be cleaned up safely.
+
+     */
+
     void deleteByUser(User user);
+
+    /**
+
+     * Deletes the matching MyDocs RSA records using Spring Data JPA so related account data can be cleaned up safely.
+
+     */
 
     void deleteByDocument(Document document);
 }

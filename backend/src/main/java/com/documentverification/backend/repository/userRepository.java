@@ -10,5 +10,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    /**
+
+     * Checks whether the specified MyDocs RSA document relationship already exists.
+
+     */
+
     boolean existsByEmail(String email);
 }

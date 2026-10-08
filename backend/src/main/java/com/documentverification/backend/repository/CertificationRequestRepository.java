@@ -12,7 +12,19 @@ public interface CertificationRequestRepository extends JpaRepository<Certificat
     List<CertificationRequest> findByUserOrderByCreatedAtDesc(User user);
     List<CertificationRequest> findByStatusOrderByCreatedAtAsc(CertificationRequestStatus status);
 
+    /**
+
+     * Deletes the matching MyDocs RSA records using Spring Data JPA so related account data can be cleaned up safely.
+
+     */
+
     void deleteByUser(User user);
+
+    /**
+
+     * Deletes the matching MyDocs RSA records using Spring Data JPA so related account data can be cleaned up safely.
+
+     */
 
     void deleteByDocument(com.documentverification.backend.entity.Document document);
 }

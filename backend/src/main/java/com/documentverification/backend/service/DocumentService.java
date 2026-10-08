@@ -37,6 +37,12 @@ public class DocumentService {
     private final DocumentValidationService documentValidationService;
     private final Path uploadDirectory = Paths.get("document-storage").toAbsolutePath().normalize();
 
+    /**
+
+     * Performs the operation represented by this method.
+
+     */
+
     public DocumentService(
             DocumentRepository documentRepository,
             UserRepository userRepository,
@@ -52,9 +58,27 @@ public class DocumentService {
         catch (IOException e) { throw new RuntimeException("Could not create document storage directory", e); }
     }
 
+    /**
+
+
+     * Stores a new document for a MyDocs RSA user and starts it in the PENDING verification state.
+
+
+     */
+
+
     public Document uploadDocument(Long userId, DocumentType documentType, MultipartFile file) {
         return uploadDocument(userId, documentType, file, false);
     }
+
+    /**
+
+
+     * Stores a new document for a MyDocs RSA user and starts it in the PENDING verification state.
+
+
+     */
+
 
     public Document uploadDocument(Long userId, DocumentType documentType, MultipartFile file, boolean hasCertifiedCopy) {
         validateFile(file);
@@ -80,6 +104,15 @@ public class DocumentService {
         document.setFileFingerprint(fingerprint(file));
         return documentRepository.save(document);
     }
+
+    /**
+
+
+     * Stores a replacement document for a submission that was marked RESUBMISSION_REQUIRED and links it to the previous version.
+
+
+     */
+
 
     public Document resubmitDocument(Long previousDocumentId, MultipartFile file) {
         validateFile(file);
@@ -108,14 +141,41 @@ public class DocumentService {
         return documentRepository.save(next);
     }
 
+    /**
+
+
+     * Returns all documents belonging to one user for the MyDocs RSA document dashboard.
+
+
+     */
+
+
     public List<Document> getDocumentsByUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return documentRepository.findByUser(user);
     }
 
+    /**
+
+
+     * Loads a document by ID for later ownership, verification or download checks.
+
+
+     */
+
+
     public Document getDocumentById(Long documentId) {
         return documentRepository.findById(documentId).orElseThrow(() -> new RuntimeException("Document not found"));
     }
+
+    /**
+
+
+     * Reads the stored document file and exposes it as a Spring Resource for secure API download.
+
+
+     */
+
 
     public Resource downloadDocument(Long documentId) {
         Document document = getDocumentById(documentId);
@@ -129,6 +189,12 @@ public class DocumentService {
     }
 
     @org.springframework.transaction.annotation.Transactional
+    /**
+
+     * Permanently removes an eligible user-owned document from both the database and document-storage directory.
+
+     */
+
     public void deleteDocumentForUser(Long documentId, Long userId) {
         Document document = getDocumentById(documentId);
 
@@ -157,6 +223,15 @@ public class DocumentService {
         documentRepository.delete(document);
     }
 
+    /**
+
+
+     * Removes the physical original/certified file associated with a document when the document is permanently deleted.
+
+
+     */
+
+
     private void deleteStoredFile(Document document) {
         if (document.getFilePath() == null || document.getFilePath().isBlank()) {
             return;
@@ -177,6 +252,15 @@ public class DocumentService {
         }
     }
 
+    /**
+
+
+     * Builds the document resubmission history used to show the different versions of a user submission.
+
+
+     */
+
+
     public List<DocumentHistoryResponse> getDocumentHistory(Long documentId) {
         List<DocumentHistoryResponse> history = new ArrayList<>();
         Document current = getDocumentById(documentId);
@@ -186,6 +270,15 @@ public class DocumentService {
         }
         return history;
     }
+
+    /**
+
+
+     * Runs the upload validation rules before MyDocs RSA accepts a file into document storage.
+
+
+     */
+
 
     private void validateFile(MultipartFile file) {
         documentValidationService.validateUpload(file);
@@ -199,12 +292,30 @@ public class DocumentService {
             throw new RuntimeException("Only PDF, JPG, JPEG and PNG files are allowed");
     }
 
+    /**
+
+
+     * Cleans the user-supplied filename so path traversal or unsafe path characters cannot escape the document-storage directory.
+
+
+     */
+
+
     private String safeOriginalFileName(MultipartFile file) {
         String name = file.getOriginalFilename();
         if (name != null) name = Paths.get(name).getFileName().toString();
         if (name == null || name.isBlank()) throw new RuntimeException("Invalid file name");
         return name;
     }
+
+    /**
+
+
+     * Calculates a SHA-256 fingerprint of the uploaded bytes so identical documents can be recognised later.
+
+
+     */
+
 
     private String fingerprint(MultipartFile file) {
         try {
