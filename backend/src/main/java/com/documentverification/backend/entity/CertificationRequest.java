@@ -54,6 +54,17 @@ public class CertificationRequest {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Audit trail: the officer who picked up / decided this request. Stored as plain values
+    // (no foreign key) so the history stays intact even if that officer's account is deleted.
+    @Column(name = "reviewed_by_id")
+    private Long reviewedById;
+
+    @Column(name = "reviewed_by_name", length = 150)
+    private String reviewedByName;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     /**
 
      * Performs the operation represented by this method.
@@ -184,4 +195,13 @@ public class CertificationRequest {
      */
 
     public void touch() { updatedAt = LocalDateTime.now(); }
+
+    public Long getReviewedById() { return reviewedById; }
+    public void setReviewedById(Long reviewedById) { this.reviewedById = reviewedById; }
+
+    public String getReviewedByName() { return reviewedByName; }
+    public void setReviewedByName(String reviewedByName) { this.reviewedByName = reviewedByName; }
+
+    public LocalDateTime getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
 }

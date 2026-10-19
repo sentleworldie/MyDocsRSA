@@ -2,10 +2,10 @@ package com.documentverification.backend.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.documentverification.backend.dto.CertificationRequestResponse;
 import com.documentverification.backend.entity.CertificationRequest;
 import com.documentverification.backend.entity.CertificationRequestStatus;
 import com.documentverification.backend.entity.DigitalCredential;
@@ -16,8 +16,6 @@ import com.documentverification.backend.entity.User;
 import com.documentverification.backend.repository.CertificationRequestRepository;
 import com.documentverification.backend.repository.DigitalCredentialRepository;
 import com.documentverification.backend.repository.UserRepository;
-
-import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class CertificationService {
@@ -38,15 +36,6 @@ public class CertificationService {
         this.documentService = documentService;
         this.validityMonths = Math.max(3, Math.min(validityMonths, 6));
     }
-
-    /**
-
-
-     * Creates a certification request, or reuses an active credential when the exact same previously verified document is submitted again.
-
-
-     */
-
 
     public Object createRequest(Long userId, DocumentType type, boolean hasCertifiedCopy, MultipartFile file) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -74,68 +63,54 @@ public class CertificationService {
         return requestRepository.save(request);
     }
 
-    /**
+    /** The user uploads a corrected file for a request the officer sent back. */
+    public CertificationRequest resubmit(Long requestId, Long userId, MultipartFile file) {
+        CertificationRequest r = getRequest(requestId);
+        if (!r.getUser().getId().equals(userId))
+            throw new RuntimeException("You are not allowed to resubmit this request");
+        if (r.getStatus() != CertificationRequestStatus.RESUBMISSION_REQUIRED)
+            throw new RuntimeException("This request is not waiting for a resubmission");
 
-
-     * Returns certification requests belonging to one MyDocs RSA user, ordered for display as their request history.
-
-
-     */
-
+        Document next = documentService.resubmitDocument(r.getDocument().getId(), file);
+        r.setDocument(next);
+        r.setStatus(CertificationRequestStatus.SUBMITTED);
+        r.setNotes(null);
+        r.touch();
+        return requestRepository.save(r);
+    }
 
     public List<CertificationRequest> getRequestsForUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return requestRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
-    /**
-
-
-     * Returns certification requests waiting for officer/admin action.
-
-
-     */
-
-
     public List<CertificationRequest> getPendingRequests() {
         return requestRepository.findByStatusOrderByCreatedAtAsc(CertificationRequestStatus.SUBMITTED);
     }
 
-    /**
+    public List<CertificationRequest> getInReviewRequests() {
+        return requestRepository.findByStatusOrderByCreatedAtAsc(CertificationRequestStatus.UNDER_REVIEW);
+    }
 
-
-     * Moves a certification request into review so an authorised officer can process it.
-
-
-     */
-
-
-    public CertificationRequest startReview(Long id) {
+    public CertificationRequest startReview(Long id, User officer) {
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.SUBMITTED && r.getStatus() != CertificationRequestStatus.INVESTIGATION_REQUIRED)
             throw new RuntimeException("Request is not awaiting review");
         r.setStatus(CertificationRequestStatus.UNDER_REVIEW);
         r.getDocument().setStatus(com.documentverification.backend.entity.VerificationStatus.UNDER_REVIEW);
+        recordReviewer(r, officer, false);
         r.touch();
         return requestRepository.save(r);
     }
 
-    /**
-
-
-     * Approves the certification request and creates or activates the digital credential linked to the verified document.
-
-
-     */
-
-
-    public CertificationRequest approve(Long id) {
+    public CertificationRequest approve(Long id, User officer) {
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.UNDER_REVIEW)
             throw new RuntimeException("Only requests under review can be approved");
         r.setStatus(CertificationRequestStatus.APPROVED);
         r.getDocument().setStatus(com.documentverification.backend.entity.VerificationStatus.APPROVED);
         r.getDocument().setRejectionReason(null);
+        recordReviewer(r, officer, true);
         r.touch();
         requestRepository.save(r);
 
@@ -149,69 +124,33 @@ public class CertificationService {
         return credentialRepository.save(credential).getId() != null ? r : r;
     }
 
-    /**
-
-
-     * Rejects a certification request and records the reason provided by the reviewing officer.
-
-
-     */
-
-
-    public CertificationRequest reject(Long id, String reason) {
+    public CertificationRequest reject(Long id, String reason, User officer) {
         if (reason == null || reason.isBlank()) throw new RuntimeException("A rejection reason is required");
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.UNDER_REVIEW) throw new RuntimeException("Only requests under review can be rejected");
         r.setStatus(CertificationRequestStatus.REJECTED);
         r.getDocument().setStatus(com.documentverification.backend.entity.VerificationStatus.REJECTED);
         r.getDocument().setRejectionReason(reason);
-        r.setNotes(reason); r.touch();
+        r.setNotes(reason); recordReviewer(r, officer, true); r.touch();
         return requestRepository.save(r);
     }
 
-    /**
-
-
-     * Marks the certification request as needing more information or another submission from the user.
-
-
-     */
-
-
-    public CertificationRequest requestMoreInformation(Long id, String reason) {
+    public CertificationRequest requestMoreInformation(Long id, String reason, User officer) {
         if (reason == null || reason.isBlank()) throw new RuntimeException("A reason is required");
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.UNDER_REVIEW) throw new RuntimeException("Only requests under review can request more information");
         r.setStatus(CertificationRequestStatus.RESUBMISSION_REQUIRED);
         r.getDocument().setStatus(com.documentverification.backend.entity.VerificationStatus.RESUBMISSION_REQUIRED);
         r.getDocument().setRejectionReason(reason);
-        r.setNotes(reason); r.touch();
+        r.setNotes(reason); recordReviewer(r, officer, true); r.touch();
         return requestRepository.save(r);
     }
-
-    /**
-
-
-     * Returns a specific digital credential only when it belongs to the requesting MyDocs RSA user.
-
-
-     */
-
 
     public DigitalCredential getCredentialForUser(Long credentialId, Long userId) {
         DigitalCredential c = credentialRepository.findById(credentialId).orElseThrow(() -> new RuntimeException("Credential not found"));
         if (!c.getUser().getId().equals(userId)) throw new RuntimeException("You are not allowed to access this credential");
         refreshExpiry(c); return c;
     }
-
-    /**
-
-
-     * Returns the user's digital credentials for the MyDocs RSA wallet.
-
-
-     */
-
 
     public List<DigitalCredential> getUserCredentials(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -220,30 +159,12 @@ public class CertificationService {
         return list;
     }
 
-    /**
-
-
-     * Finds a credential by verification code and refreshes its status based on its validity period.
-
-
-     */
-
-
     public DigitalCredential verifyCredential(String code) {
         DigitalCredential c = credentialRepository.findByVerificationCode(code)
                 .orElseThrow(() -> new RuntimeException("Credential not found"));
         refreshExpiry(c);
         return c;
     }
-
-    /**
-
-
-     * Changes an active credential to EXPIRED when its six-month validity period has passed.
-
-
-     */
-
 
     private void refreshExpiry(DigitalCredential c) {
         if (c.getStatus() == com.documentverification.backend.entity.CredentialStatus.ACTIVE
@@ -253,27 +174,16 @@ public class CertificationService {
         }
     }
 
-    /**
-
-
-     * Loads a certification request by ID or reports that the requested request does not exist.
-
-
-     */
-
+    /** Audit trail: remember which officer picked up (decided=false) or decided (decided=true) the request. */
+    private void recordReviewer(CertificationRequest r, User officer, boolean decided) {
+        r.setReviewedById(officer.getId());
+        r.setReviewedByName(officer.getFullName());
+        r.setReviewedAt(decided ? java.time.LocalDateTime.now() : null);
+    }
 
     private CertificationRequest getRequest(Long id) {
         return requestRepository.findById(id).orElseThrow(() -> new RuntimeException("Certification request not found"));
     }
-
-    /**
-
-
-     * Creates a SHA-256 fingerprint of the uploaded document so MyDocs RSA can recognise an identical previously verified file.
-
-
-     */
-
 
     private String fingerprint(MultipartFile file) {
         try {

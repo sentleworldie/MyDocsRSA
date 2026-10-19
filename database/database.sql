@@ -99,7 +99,9 @@ USE document_verification;
 ALTER TABLE documents 
 ADD COLUMN original_file_name VARCHAR(255) NOT NULL,
 ADD COLUMN stored_file_name VARCHAR(255) NOT NULL,
-ADD COLUMN updated_at DATETIME(6);
+ADD COLUMN updated_at DATETIME(6)
+UPDATE users SET role='POLICE_OFFICER' WHERE email='officer@test.com';
+
 
 USE document_verification;
 
@@ -127,3 +129,7 @@ FROM documents
 WHERE id = 4;
 
 USE document_verification;
+
+
+UPDATE users SET role='POLICE_OFFICER' WHERE email='officer@test.com';
+

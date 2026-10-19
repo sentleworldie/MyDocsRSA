@@ -25,7 +25,11 @@ public record CertificationRequestResponse(
         String status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        String notes) {
+        String notes,
+        String applicantName,
+        String originalFileName,
+        String reviewedByName,
+        LocalDateTime reviewedAt) {
     /**
 
      * Handles the from operation used by the MyDocs RSA backend.
@@ -35,6 +39,8 @@ public record CertificationRequestResponse(
     public static CertificationRequestResponse from(CertificationRequest r) {
         return new CertificationRequestResponse(r.getId(), r.getDocument().getId(),
                 r.getDocument().getDocumentType().name(), r.isHasCertifiedCopy(),
-                r.getProcessingPath().name(), r.getStatus().name(), r.getCreatedAt(), r.getUpdatedAt(), r.getNotes());
+                r.getProcessingPath().name(), r.getStatus().name(), r.getCreatedAt(), r.getUpdatedAt(), r.getNotes(),
+                r.getUser().getFullName(), r.getDocument().getOriginalFileName(),
+                r.getReviewedByName(), r.getReviewedAt());
     }
 }

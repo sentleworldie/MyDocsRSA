@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local Java JDK installation
+backend/oracleJdk-21/
+
+# Build output
+target/
+build/
