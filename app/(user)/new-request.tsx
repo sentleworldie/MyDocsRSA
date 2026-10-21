@@ -103,28 +103,45 @@ export default function NewRequestScreen() {
 
   // ---- Form ----
   return (
-    <Page title="Submit Document" subtitle="Three quick steps" back>
-      <Banner
-        kind="info"
-        message="An officer will review your document. Choosing “Yes” below when you already have a certified copy speeds this up."
-      />
+    <Page title="Upload document" subtitle="Add a document for an officer to verify" back>
+      <View style={{ gap: 6 }}>
+        <Pressable onPress={chooseFile} style={[styles.upload, errors.file ? styles.uploadError : null]}>
+          <View style={styles.uploadIcon}>
+            <Ionicons name={file ? 'document-attach-outline' : 'cloud-upload-outline'} size={30} color={colors.primary} />
+          </View>
+          {file ? (
+            <>
+              <Text style={styles.uploadTitle} numberOfLines={1}>
+                {file.name}
+              </Text>
+              <Text style={styles.uploadHint}>{formatFileSize(file.size)} · tap to choose a different file</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.uploadTitle}>Tap to upload your document</Text>
+              <Text style={styles.uploadHint}>PDF, JPG or PNG (max 10MB)</Text>
+            </>
+          )}
+        </Pressable>
+        {errors.file ? <Text style={styles.error}>{errors.file}</Text> : null}
+      </View>
 
       <SelectField
-        label="1. Document type"
+        label="Document type"
         options={TYPE_OPTIONS}
         value={docType}
         onChange={(v) => {
           setDocType(v);
           setErrors((e) => ({ ...e, docType: undefined }));
         }}
-        placeholder="Choose a document type"
+        placeholder="Select document type"
         error={errors.docType}
       />
 
       <View style={{ gap: 8 }}>
-        <Text style={styles.label}>2. DO YOU HAVE A CERTIFIED COPY?</Text>
+        <Text style={styles.label}>Do you have a certified copy?</Text>
         <Text style={styles.helper}>
-          A certified copy is stamped and signed by a commissioner of oaths or a police station.
+          A certified copy is stamped and signed by a commissioner of oaths or a police station. Choosing Yes speeds up your review.
         </Text>
         <View style={styles.row}>
           {[
@@ -149,39 +166,14 @@ export default function NewRequestScreen() {
         {errors.hasCopy ? <Text style={styles.error}>{errors.hasCopy}</Text> : null}
       </View>
 
-      <View style={{ gap: 8 }}>
-        <Text style={styles.label}>3. UPLOAD THE DOCUMENT</Text>
-        <Pressable onPress={chooseFile} style={[styles.upload, errors.file ? styles.uploadError : null]}>
-          <View style={styles.uploadIcon}>
-            <Ionicons name={file ? 'document-attach-outline' : 'cloud-upload-outline'} size={26} color={colors.primary} />
-          </View>
-          {file ? (
-            <>
-              <Text style={styles.uploadTitle} numberOfLines={1}>
-                {file.name}
-              </Text>
-              <Text style={styles.uploadHint}>
-                {formatFileSize(file.size)} · tap to choose a different file
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.uploadTitle}>Tap to upload your document</Text>
-              <Text style={styles.uploadHint}>JPG, PNG or PDF · max 10MB</Text>
-            </>
-          )}
-        </Pressable>
-        {errors.file ? <Text style={styles.error}>{errors.file}</Text> : null}
-      </View>
-
       {serverError ? <Banner message={serverError} /> : null}
-      <Button title="Submit for Verification" icon="shield-checkmark-outline" onPress={handleSubmit} loading={loading} />
+      <Button title="Upload document" icon="shield-checkmark-outline" onPress={handleSubmit} loading={loading} />
     </Page>
   );
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 11, fontWeight: '700', color: colors.muted, letterSpacing: 0.6 },
+  label: { fontSize: 13, fontWeight: '700', color: colors.text },
   helper: { fontSize: 13, color: colors.muted, lineHeight: 18 },
   error: { color: colors.danger, fontSize: 13 },
   row: { flexDirection: 'row', gap: 10 },
@@ -197,36 +189,35 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   choiceOn: { borderColor: colors.primary, backgroundColor: colors.cardTint },
-  choiceText: { fontSize: 15, fontWeight: '600', color: colors.text },
+  choiceText: { fontSize: 14, fontWeight: '700', color: colors.text },
   upload: {
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     borderWidth: 2,
     borderStyle: 'dashed',
     borderColor: '#93B4F5',
-    backgroundColor: colors.infoBg,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
-    paddingVertical: 24,
+    paddingVertical: 28,
     paddingHorizontal: 16,
+    ...cardShadow,
   },
   uploadError: { borderColor: colors.danger },
   uploadIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.card,
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  uploadTitle: { fontSize: 15, fontWeight: '700', color: colors.primaryDark, maxWidth: '100%' },
+  uploadTitle: { fontSize: 15, fontWeight: '700', color: colors.text, maxWidth: '100%' },
   uploadHint: { fontSize: 12, color: colors.muted },
   success: {
     alignItems: 'center',
     gap: 10,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: 24,
     ...cardShadow,
   },

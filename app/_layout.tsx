@@ -1,22 +1,15 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { colors } from '@/constants/colors';
+import { Splash } from '@/components/splash';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 function RootNavigator() {
   const { user, loading } = useAuth();
 
-  // Wait until the saved login (if any) has been restored
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  // Wait until the saved login (if any) has been restored; show the welcome screen meanwhile
+  if (loading) return <Splash />;
 
   // Role-based routing: each group is only reachable by the matching role.
   return (

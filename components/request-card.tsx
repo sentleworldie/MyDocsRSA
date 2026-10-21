@@ -32,26 +32,24 @@ export function RequestCard({ request, onPress, onChanged }: Props) {
   return (
     <View style={styles.card}>
       <Pressable onPress={onPress} style={styles.top}>
-        <DocIcon type={request.documentType} size={42} />
+        <DocIcon type={request.documentType} size={44} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title} numberOfLines={1}>
             {documentTypeLabel(request.documentType)}
           </Text>
-          <Text style={styles.meta}>
-            Submitted {formatDate(request.createdAt)} ·{' '}
+          <Text style={styles.meta} numberOfLines={1}>
+            {formatDate(request.createdAt)} ·{' '}
             {request.processingPath === 'FAST_TRACK_CERTIFIED_COPY' ? 'Fast track' : 'Full investigation'}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+        <RequestStatusBadge status={request.status} />
       </Pressable>
-
-      <RequestStatusBadge status={request.status} />
 
       <View style={styles.progress}>
         {STEP_LABELS.map((label, index) => {
           const reached = index <= step;
           const isLast = index === 2;
-          const dotColor = !reached
+          const color = !reached
             ? colors.border
             : isLast && failed
               ? colors.danger
@@ -60,7 +58,13 @@ export function RequestCard({ request, onPress, onChanged }: Props) {
                 : colors.primary;
           return (
             <View key={label} style={styles.progressItem}>
-              <View style={[styles.dot, { backgroundColor: dotColor }]} />
+              <View style={styles.dotRow}>
+                <View style={[styles.line, index === 0 ? { backgroundColor: 'transparent' } : { backgroundColor: color }]} />
+                <View style={[styles.dot, { backgroundColor: color }]}>
+                  {reached ? <Ionicons name={isLast && failed ? 'close' : 'checkmark'} size={10} color="#FFFFFF" /> : null}
+                </View>
+                <View style={[styles.line, index === 2 ? { backgroundColor: 'transparent' } : { backgroundColor: index < step ? color : colors.border }]} />
+              </View>
               <Text style={[styles.progressLabel, reached ? styles.progressLabelOn : null]}>{label}</Text>
             </View>
           );
@@ -87,17 +91,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 10,
+    gap: 12,
     ...cardShadow,
   },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { fontSize: 16, fontWeight: '700', color: colors.text },
+  title: { fontSize: 15, fontWeight: '700', color: colors.text },
   meta: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  progress: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
+  progress: { flexDirection: 'row' },
   progressItem: { alignItems: 'center', flex: 1, gap: 5 },
-  dot: { width: 12, height: 12, borderRadius: 6 },
+  dotRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
+  line: { flex: 1, height: 3 },
+  dot: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   progressLabel: { fontSize: 11, color: colors.muted },
   progressLabelOn: { color: colors.text, fontWeight: '700' },
 });

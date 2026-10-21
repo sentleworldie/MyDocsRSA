@@ -4,28 +4,47 @@ import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { DocumentCard } from '@/components/document-card';
+import { FilterChips, type Chip } from '@/components/filter-chips';
 import { LoadError } from '@/components/load-error';
-import { HeaderButton, Page } from '@/components/page';
+import { Page } from '@/components/page';
 import { Banner, Button } from '@/components/ui-kit';
 import { cardShadow, colors, radius } from '@/constants/colors';
-import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
-import { fetchMyDocuments } from '@/lib/certification';
+import { fetchMyRequests } from '@/lib/certification';
 import { openDocument } from '@/lib/documents';
 import type { CertificationRequest } from '@/lib/types';
 import { useLoad } from '@/lib/use-load';
 
+type Filter = 'ALL' | 'PENDING' | 'VERIFIED' | 'REJECTED';
+
+function inFilter(r: CertificationRequest, f: Filter) {
+  switch (f) {
+    case 'ALL':
+      return true;
+    case 'PENDING':
+      return ['SUBMITTED', 'UNDER_REVIEW', 'INVESTIGATION_REQUIRED'].includes(r.status);
+    case 'VERIFIED':
+      return r.status === 'APPROVED';
+    case 'REJECTED':
+      return r.status === 'REJECTED' || r.status === 'RESUBMISSION_REQUIRED';
+  }
+}
+
 export default function DocumentsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const docs = useLoad(fetchMyDocuments);
+  const docs = useLoad(fetchMyRequests);
+  const [filter, setFilter] = useState<Filter>('ALL');
   const [downloadError, setDownloadError] = useState('');
 
-  const requests = docs.data?.requests ?? [];
-  const verified = requests.filter((r) => r.status === 'APPROVED').length;
-  const waiting = requests.filter((r) => ['SUBMITTED', 'UNDER_REVIEW', 'INVESTIGATION_REQUIRED'].includes(r.status)).length;
-  const action = requests.filter((r) => r.status === 'RESUBMISSION_REQUIRED' || r.status === 'REJECTED').length;
-  const firstName = user?.fullName?.split(' ')[0] ?? '';
+  const requests = docs.data ?? [];
+  const count = (f: Filter) => requests.filter((r) => inFilter(r, f)).length;
+  const chips: Chip<Filter>[] = [
+    { value: 'ALL', label: 'All' },
+    { value: 'PENDING', label: 'Pending', count: count('PENDING') },
+    { value: 'VERIFIED', label: 'Verified' },
+    { value: 'REJECTED', label: 'Rejected' },
+  ];
+  const shown = requests.filter((r) => inFilter(r, filter));
 
   async function download(request: CertificationRequest) {
     setDownloadError('');
@@ -38,14 +57,13 @@ export default function DocumentsScreen() {
 
   return (
     <Page
-      title="My Documents"
-      subtitle={`Welcome back, ${firstName}`}
-      right={<HeaderButton icon="person-circle-outline" label="Profile" onPress={() => router.push('/account')} />}
+      title="My documents"
+      subtitle={requests.length > 0 ? 'Tap a verified document to see its digital card' : undefined}
       refreshing={docs.refreshing}
       onRefresh={docs.refresh}
-      fab={{ label: 'Add', onPress: () => router.push('/new-request') }}>
+      fab={{ label: 'Add document', onPress: () => router.push('/new-request') }}>
       {docs.loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 60 }} />
       ) : docs.error ? (
         <LoadError state={docs} />
       ) : requests.length === 0 ? (
@@ -57,71 +75,38 @@ export default function DocumentsScreen() {
           <Text style={styles.emptyText}>
             Add an ID, licence or certificate. Once an officer verifies it, your digital card appears here.
           </Text>
-          <Button title="Add your first document" icon="add-circle-outline" onPress={() => router.push('/new-request')} />
+          <View style={{ alignSelf: 'stretch' }}>
+            <Button title="Add your first document" icon="add-circle-outline" onPress={() => router.push('/new-request')} />
+          </View>
         </View>
       ) : (
         <>
-          <View style={styles.summary}>
-            <Tile value={verified} label="Verified" color={colors.success} />
-            <View style={styles.divider} />
-            <Tile value={waiting} label="In progress" color={colors.primary} />
-            <View style={styles.divider} />
-            <Tile value={action} label="Needs action" color={action > 0 ? colors.danger : colors.muted} />
-          </View>
-
-          {verified > 0 ? (
-            <View style={styles.note}>
-              <Ionicons name="download-outline" size={14} color={colors.muted} />
-              <Text style={styles.noteText}>Verified documents can be downloaded or shared from here.</Text>
-            </View>
-          ) : null}
+          <FilterChips chips={chips} selected={filter} onSelect={setFilter} />
           {downloadError ? <Banner message={downloadError} /> : null}
 
-          {requests.map((r) => (
-            <DocumentCard
-              key={r.requestId}
-              request={r}
-              onPress={() => router.push(`/document/${r.requestId}`)}
-              onDownload={() => download(r)}
-            />
-          ))}
-
+          {shown.length === 0 ? (
+            <Text style={styles.none}>No documents in this tab.</Text>
+          ) : (
+            shown.map((r) => (
+              <DocumentCard
+                key={r.requestId}
+                request={r}
+                onPress={() => router.push(`/document/${r.requestId}`)}
+                onDownload={() => download(r)}
+              />
+            ))
+          )}
         </>
       )}
     </Page>
   );
 }
 
-function Tile({ value, label, color }: { value: number; label: string; color: string }) {
-  return (
-    <View style={styles.tile}>
-      <Text style={[styles.tileValue, { color }]}>{value}</Text>
-      <Text style={styles.tileLabel}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  summary: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 14,
-    ...cardShadow,
-  },
-  tile: { flex: 1, alignItems: 'center' },
-  tileValue: { fontSize: 24, fontWeight: '800' },
-  tileLabel: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  divider: { width: 1, backgroundColor: colors.border },
-  note: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
-  noteText: { fontSize: 12, color: colors.muted },
+  none: { textAlign: 'center', color: colors.muted, fontSize: 14, marginTop: 24 },
   empty: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: 24,
     alignItems: 'center',
     gap: 10,

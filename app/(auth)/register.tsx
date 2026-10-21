@@ -1,10 +1,8 @@
 import { Link } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { BrandMark } from '@/components/brand';
-import { Banner, Button, Field, Screen, textStyles } from '@/components/ui-kit';
+import { Banner, Button, Field, HeaderScreen, textStyles } from '@/components/ui-kit';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
@@ -50,15 +48,22 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen>
-      <StatusBar style="dark" />
-      <BrandMark compact />
-      <Text style={styles.heading}>Create your account</Text>
-      <Text style={styles.sub}>Register to certify and verify your documents</Text>
-
-      <Field label="Full name" value={fullName} onChangeText={setFullName} error={fieldErrors.fullName} placeholder="Your full name" />
+    <HeaderScreen
+      title="Create account"
+      subtitle="Join MyDocs RSA and keep your important documents safe."
+      back
+      footer={
+        <View style={styles.footer}>
+          <Text style={{ color: colors.muted }}>Already have an account?</Text>
+          <Link href="./login" style={textStyles.link}>
+            Login
+          </Link>
+        </View>
+      }>
+      <Field label="Full name" icon="person-outline" value={fullName} onChangeText={setFullName} error={fieldErrors.fullName} placeholder="Enter your full name" />
       <Field
-        label="Email"
+        label="Email address"
+        icon="mail-outline"
         value={email}
         onChangeText={setEmail}
         error={fieldErrors.email}
@@ -69,14 +74,16 @@ export default function RegisterScreen() {
       />
       <Field
         label="Phone number (optional)"
+        icon="call-outline"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
         error={fieldErrors.phoneNumber}
         keyboardType="phone-pad"
-        placeholder="0XX XXX XXXX"
+        placeholder="+27 12 345 6789"
       />
       <Field
         label="Password"
+        icon="lock-closed-outline"
         value={password}
         onChangeText={setPassword}
         error={fieldErrors.password}
@@ -91,22 +98,13 @@ export default function RegisterScreen() {
       ) : null}
 
       <View style={styles.gap}>
-        <Button title="Create Account" onPress={handleRegister} loading={loading} />
+        <Button title="Register" onPress={handleRegister} loading={loading} />
       </View>
-
-      <View style={styles.footer}>
-        <Text style={{ color: colors.muted }}>Already registered?</Text>
-        <Link href="./login" style={textStyles.link}>
-          Log In
-        </Link>
-      </View>
-    </Screen>
+    </HeaderScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: { fontSize: 20, fontWeight: '800', color: colors.text, textAlign: 'center', marginTop: 4 },
-  sub: { fontSize: 13, color: colors.muted, textAlign: 'center', marginBottom: 4 },
   gap: { marginTop: 18 },
-  footer: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 22 },
+  footer: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
 });

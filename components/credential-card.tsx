@@ -1,61 +1,114 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { CredentialStatusBadge } from '@/components/badge';
-import { DOC_COLORS } from '@/components/doc-icon';
+import { DOC_GRADIENTS } from '@/components/doc-icon';
 import { formatDate } from '@/lib/format';
-import { documentTypeLabel, type Credential } from '@/lib/types';
+import { documentTypeLabel, type Credential, type CredentialStatus } from '@/lib/types';
 
-type Props = { credential: Credential; holderName: string };
+type Props = { credential: Credential; holderName: string; style?: StyleProp<ViewStyle> };
 
-/** The wallet-style digital card shown at the top of a verified document. */
-export function CredentialCard({ credential, holderName }: Props) {
+const INACTIVE_GRADIENT: [string, string] = ['#334155', '#64748B'];
+const RINGS = [0, 1, 2, 3, 4, 5, 6];
+const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
+
+const SEAL_ICON: Record<CredentialStatus, 'shield-checkmark' | 'time' | 'ban'> = {
+  ACTIVE: 'shield-checkmark',
+  EXPIRED: 'time',
+  REVOKED: 'ban',
+};
+
+/**
+ * The digital card for a verified document: ID-1 proportions (like a bank card), a fine ring
+ * pattern in the corner and a seal with the app's shield. Pass a width through `style`.
+ */
+export function CredentialCard({ credential, holderName, style }: Props) {
   const active = credential.status === 'ACTIVE';
-  const background = active ? DOC_COLORS[credential.documentType] ?? '#1D4ED8' : '#6B7280';
+  const gradient = active ? DOC_GRADIENTS[credential.documentType] ?? DOC_GRADIENTS.ID_DOCUMENT : INACTIVE_GRADIENT;
 
   return (
-    <View style={[styles.card, { backgroundColor: background }]}>
-      <View style={styles.top}>
-        <View style={styles.brand}>
-          <Ionicons name="shield-checkmark" size={18} color="#FFFFFF" />
-          <Text style={styles.brandText}>MyDocs RSA</Text>
+    <View style={[styles.shadow, style]}>
+      <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
+        <View style={styles.ringAnchor} pointerEvents="none">
+          {RINGS.map((i) => {
+            const size = 80 + i * 40;
+            return (
+              <View
+                key={i}
+                style={[styles.ring, { width: size, height: size, borderRadius: size / 2, left: -size / 2, top: -size / 2 }]}
+              />
+            );
+          })}
         </View>
-        <CredentialStatusBadge status={credential.status} />
-      </View>
 
-      <Text style={styles.type}>{documentTypeLabel(credential.documentType)}</Text>
-      <Text style={styles.holder} numberOfLines={1}>
-        {holderName}
-      </Text>
+        <View style={styles.top}>
+          <View style={styles.brand}>
+            <Ionicons name="shield-checkmark" size={16} color="#FFFFFF" />
+            <Text style={styles.brandText}>MyDocs RSA</Text>
+          </View>
+          <CredentialStatusBadge status={credential.status} />
+        </View>
 
-      <View style={styles.footer}>
-        <View>
-          <Text style={styles.small}>VALID UNTIL</Text>
-          <Text style={styles.value}>{formatDate(credential.validUntil)}</Text>
+        <View style={styles.middle}>
+          <Text style={styles.type}>{documentTypeLabel(credential.documentType)}</Text>
+          <Text style={styles.holder} numberOfLines={1}>
+            {holderName}
+          </Text>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.small}>CARD NO.</Text>
-          <Text style={styles.value}>#{credential.credentialId}</Text>
+
+        <View style={styles.footer}>
+          <View>
+            <Text style={styles.small}>Valid until</Text>
+            <Text style={styles.value}>{formatDate(credential.validUntil)}</Text>
+          </View>
+          <View>
+            <Text style={styles.small}>Verification code</Text>
+            <Text style={[styles.value, { fontFamily: MONO, letterSpacing: 0.5 }]} numberOfLines={1}>
+              {credential.verificationCode}
+            </Text>
+          </View>
         </View>
-      </View>
+
+        <View style={styles.seal}>
+          <Ionicons name={SEAL_ICON[credential.status]} size={26} color="#FFFFFF" />
+        </View>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shadow: { borderRadius: 22, boxShadow: '0 12px 26px rgba(11, 30, 91, 0.25)', elevation: 6 },
   card: {
-    borderRadius: 20,
+    aspectRatio: 1.586,
+    borderRadius: 22,
     padding: 20,
-    gap: 6,
-    boxShadow: '0 6px 16px rgba(15, 23, 42, 0.18)',
-    elevation: 4,
+    justifyContent: 'space-between',
+    overflow: 'hidden',
   },
+  ringAnchor: { position: 'absolute', top: 24, right: 24, width: 0, height: 0 },
+  ring: { position: 'absolute', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  brandText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13, letterSpacing: 0.4 },
-  type: { color: 'rgba(255,255,255,0.85)', fontSize: 14, marginTop: 18 },
-  holder: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 18 },
-  small: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '700', letterSpacing: 0.8 },
-  value: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 2 },
+  brandText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13, letterSpacing: 0.3 },
+  middle: { gap: 2, paddingRight: 64 },
+  type: { color: 'rgba(255,255,255,0.8)', fontSize: 14 },
+  holder: { color: '#FFFFFF', fontSize: 23, fontWeight: '800', letterSpacing: -0.3 },
+  footer: { flexDirection: 'row', gap: 28 },
+  small: { color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: '600' },
+  value: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginTop: 2 },
+  seal: {
+    position: 'absolute',
+    right: 18,
+    bottom: 18,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

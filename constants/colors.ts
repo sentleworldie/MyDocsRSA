@@ -1,30 +1,38 @@
-// MyDocs RSA design tokens (royal blue, light surfaces, green/amber/red status colours)
+// MyDocs RSA design tokens: deep navy headers, royal-blue actions, white cards on a soft blue-grey page,
+// and clear green / orange / red status colours. Key names are unchanged from the original file.
 export const colors = {
   primary: '#1D4ED8',
   primaryDark: '#1E3A8A',
   primarySoft: '#DBEAFE',
   primaryText: '#FFFFFF',
-  background: '#F4F6FB',
+
+  navy: '#0B1E5B', // headers, splash
+  navyMid: '#15358F',
+
+  background: '#F4F7FD',
   card: '#FFFFFF',
   cardTint: '#EEF3FB',
-  border: '#E2E8F0',
+  border: '#E3E9F5',
+
   text: '#0F172A',
   muted: '#64748B',
   faint: '#94A3B8',
-  danger: '#B91C1C',
+
+  danger: '#DC2626',
   dangerBg: '#FEE2E2',
   dangerBorder: '#FCA5A5',
   success: '#15803D',
   successBg: '#DCFCE7',
-  warn: '#B45309',
-  warnBg: '#FEF3C7',
+  warn: '#C2410C',
+  warnBg: '#FFEDD5',
+  info: '#1D4ED8',
   infoBg: '#DBEAFE',
 };
 
 export const radius = { sm: 10, md: 14, lg: 20 };
 
-/** Soft shadow used on cards (elevation covers Android, boxShadow the rest). */
+/** Soft blue-tinted shadow used on cards (elevation covers Android, boxShadow the rest). */
 export const cardShadow = {
-  boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
-  elevation: 1,
+  boxShadow: '0 4px 16px rgba(15, 35, 95, 0.08)',
+  elevation: 2,
 } as const;

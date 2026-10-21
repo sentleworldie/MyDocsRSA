@@ -2,30 +2,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { IconName } from '@/components/ui-kit';
-import { cardShadow, colors, radius } from '@/constants/colors';
+import { colors, radius } from '@/constants/colors';
 
 type Tone = 'default' | 'good' | 'warn' | 'bad';
 
-const TONES: Record<Tone, { fg: string; bg: string }> = {
-  default: { fg: colors.primary, bg: colors.primarySoft },
-  good: { fg: colors.success, bg: colors.successBg },
-  warn: { fg: colors.warn, bg: colors.warnBg },
-  bad: { fg: colors.danger, bg: colors.dangerBg },
+const TONES: Record<Tone, { fg: string; bg: string; border: string }> = {
+  default: { fg: colors.primary, bg: '#EAF1FF', border: '#CFE0FF' },
+  good: { fg: colors.success, bg: '#E8F8EE', border: '#BFEBCF' },
+  warn: { fg: colors.warn, bg: '#FFF1E3', border: '#FBD5AE' },
+  bad: { fg: colors.danger, bg: '#FEECEC', border: '#F8C4C4' },
 };
 
+/** A pastel tile: icon, big number, small label (like the dashboard tiles). */
 export function StatCard({ label, value, icon, tone = 'default' }: { label: string; value: number | string; icon: IconName; tone?: Tone }) {
   const t = TONES[tone];
   return (
-    <View style={styles.card}>
-      <View style={[styles.icon, { backgroundColor: t.bg }]}>
-        <Ionicons name={icon} size={20} color={t.fg} />
+    <View style={[styles.card, { backgroundColor: t.bg, borderColor: t.border }]}>
+      <View style={styles.iconTile}>
+        <Ionicons name={icon} size={19} color={t.fg} />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.value}>{value}</Text>
-        <Text style={styles.label} numberOfLines={2}>
-          {label}
-        </Text>
-      </View>
+      <Text style={[styles.value, { color: t.fg }]}>{value}</Text>
+      <Text style={styles.label} numberOfLines={2}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -40,17 +39,20 @@ const styles = StyleSheet.create({
   card: {
     flexGrow: 1,
     flexBasis: '47%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    ...cardShadow,
+    padding: 14,
+    gap: 2,
   },
-  icon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  value: { fontSize: 22, fontWeight: '800', color: colors.text },
-  label: { fontSize: 12, color: colors.muted },
+  iconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  value: { fontSize: 28, fontWeight: '800' },
+  label: { fontSize: 12, color: colors.muted, fontWeight: '600' },
 });

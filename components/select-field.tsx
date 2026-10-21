@@ -22,7 +22,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
 
   return (
     <View style={{ gap: 6 }}>
-      <Text style={styles.label}>{label.toUpperCase()}</Text>
+      <Text style={styles.label}>{label}</Text>
       <Pressable
         onPress={() => setOpen((v) => !v)}
         style={[styles.field, open ? styles.fieldOpen : null, error ? styles.fieldError : null]}>
@@ -60,13 +60,13 @@ export function SelectField<T extends string>({ label, options, value, onChange,
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 11, fontWeight: '700', color: colors.muted, letterSpacing: 0.6 },
+  label: { fontSize: 13, fontWeight: '700', color: colors.text },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: radius.md - 2,
     paddingHorizontal: 14,

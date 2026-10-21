@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
@@ -18,13 +19,13 @@ type Props = {
   children: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
-  /** A round floating action button in the bottom-right corner. */
+  /** A round blue "+" button floating in the bottom-right corner. */
   fab?: { label: string; onPress: () => void };
 };
 
 /**
- * Standard screen: a blue header bar (title, optional back arrow and action), then a
- * scrolling content area on a light background. Pull down to refresh when onRefresh is given.
+ * Standard screen: a navy header (title, optional back arrow and action) with the first card of
+ * the content overlapping its curved bottom edge. Pull down to refresh when onRefresh is given.
  */
 export function Page({ title, subtitle, back, right, children, refreshing = false, onRefresh, fab }: Props) {
   const insets = useSafeAreaInsets();
@@ -34,7 +35,11 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
+      <LinearGradient
+        colors={[colors.navy, colors.navyMid]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <View style={styles.headerRow}>
           {back ? (
             <Pressable
@@ -42,9 +47,8 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
                 if (router.canGoBack()) router.back();
               }}
               hitSlop={12}
-              style={styles.backButton}
               accessibilityLabel="Go back">
-              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </Pressable>
           ) : null}
           <View style={styles.headerText}>
@@ -59,9 +63,10 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
           </View>
           {right}
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={[styles.content, fab ? { paddingBottom: 110 } : null]}
         keyboardShouldPersistTaps="handled"
         refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined}>
@@ -71,13 +76,10 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
       {fab ? (
         <Pressable
           onPress={fab.onPress}
-          style={({ pressed }) => [styles.fabWrap, pressed ? { opacity: 0.8 } : null]}
+          style={({ pressed }) => [styles.fab, pressed ? { opacity: 0.88, transform: [{ scale: 0.97 }] } : null]}
           accessibilityRole="button"
           accessibilityLabel={fab.label}>
-          <View style={styles.fab}>
-            <Ionicons name="add" size={30} color="#FFFFFF" />
-          </View>
-          <Text style={styles.fabLabel}>{fab.label}</Text>
+          <Ionicons name="add" size={32} color="#FFFFFF" />
         </Pressable>
       ) : null}
     </View>
@@ -96,43 +98,37 @@ export function HeaderButton({ icon, onPress, label }: { icon: IconName; onPress
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingBottom: 50,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   headerText: { flex: 1 },
-  title: { color: '#FFFFFF', fontSize: 24, fontWeight: '700' },
-  subtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 14, marginTop: 3 },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  title: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', letterSpacing: -0.2 },
+  subtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 3 },
   headerButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  content: { padding: 20, paddingBottom: 40, gap: 14 },
-  fabWrap: { position: 'absolute', right: 20, bottom: 20, alignItems: 'center', gap: 2 },
+  // The scroll area starts inside the header's curved edge, so the first card overlaps it
+  scroll: { marginTop: -32 },
+  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 14 },
   fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
     width: 58,
     height: 58,
     borderRadius: 29,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(29, 78, 216, 0.4)',
+    boxShadow: '0 8px 18px rgba(29, 78, 216, 0.4)',
     elevation: 6,
   },
-  fabLabel: { fontSize: 11, fontWeight: '700', color: colors.muted },
 });
