@@ -7,10 +7,10 @@ import { colors, radius } from '@/constants/colors';
 type Tone = 'default' | 'good' | 'warn' | 'bad';
 
 const TONES: Record<Tone, { fg: string; bg: string; border: string }> = {
-  default: { fg: colors.primary, bg: '#EAF1FF', border: '#CFE0FF' },
-  good: { fg: colors.success, bg: '#E8F8EE', border: '#BFEBCF' },
-  warn: { fg: colors.warn, bg: '#FFF1E3', border: '#FBD5AE' },
-  bad: { fg: colors.danger, bg: '#FEECEC', border: '#F8C4C4' },
+  default: { fg: colors.info, bg: '#E8F0FA', border: '#C9DAF0' },
+  good: { fg: colors.success, bg: '#E3F4EC', border: '#B7E2CF' },
+  warn: { fg: colors.warn, bg: '#FBF0D0', border: '#EBD49A' },
+  bad: { fg: colors.danger, bg: '#FDE8E6', border: '#F2B7AF' },
 };
 
 /** A pastel tile: icon, big number, small label (like the dashboard tiles). */

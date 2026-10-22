@@ -37,6 +37,7 @@ export function AccountPanel({ roleLabel }: { roleLabel: string }) {
         <View style={{ marginTop: 6 }}>
           <Pill label={roleLabel} tone="info" />
         </View>
+        <View style={styles.goldLine} />
       </LinearGradient>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -73,7 +74,8 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 52,
+    paddingBottom: 28,
+    overflow: 'hidden',
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     gap: 4,
@@ -93,8 +95,9 @@ const styles = StyleSheet.create({
   avatarText: { color: colors.navy, fontSize: 30, fontWeight: '800' },
   name: { color: '#FFFFFF', fontSize: 20, fontWeight: '800' },
   email: { color: 'rgba(255,255,255,0.78)', fontSize: 14 },
-  scroll: { marginTop: -30 },
-  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
+  goldLine: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: colors.gold, opacity: 0.85 },
+  scroll: {},
+  content: { padding: 20, paddingBottom: 40, gap: 16 },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,

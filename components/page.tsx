@@ -19,13 +19,13 @@ type Props = {
   children: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
-  /** A round blue "+" button floating in the bottom-right corner. */
+  /** A floating "pill" button in the bottom-right corner (plus icon and label). */
   fab?: { label: string; onPress: () => void };
 };
 
 /**
- * Standard screen: a navy header (title, optional back arrow and action) with the first card of
- * the content overlapping its curved bottom edge. Pull down to refresh when onRefresh is given.
+ * Standard screen: a navy gradient header (title, optional back arrow and action), then a
+ * scrolling content area on a light background. Pull down to refresh when onRefresh is given.
  */
 export function Page({ title, subtitle, back, right, children, refreshing = false, onRefresh, fab }: Props) {
   const insets = useSafeAreaInsets();
@@ -47,8 +47,9 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
                 if (router.canGoBack()) router.back();
               }}
               hitSlop={12}
+              style={styles.roundButton}
               accessibilityLabel="Go back">
-              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </Pressable>
           ) : null}
           <View style={styles.headerText}>
@@ -63,10 +64,10 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
           </View>
           {right}
         </View>
+        <View style={styles.goldLine} />
       </LinearGradient>
 
       <ScrollView
-        style={styles.scroll}
         contentContainerStyle={[styles.content, fab ? { paddingBottom: 110 } : null]}
         keyboardShouldPersistTaps="handled"
         refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined}>
@@ -76,10 +77,11 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
       {fab ? (
         <Pressable
           onPress={fab.onPress}
-          style={({ pressed }) => [styles.fab, pressed ? { opacity: 0.88, transform: [{ scale: 0.97 }] } : null]}
+          style={({ pressed }) => [styles.fab, pressed ? { opacity: 0.88, transform: [{ scale: 0.98 }] } : null]}
           accessibilityRole="button"
           accessibilityLabel={fab.label}>
-          <Ionicons name="add" size={32} color="#FFFFFF" />
+          <Ionicons name="add" size={22} color="#FFFFFF" />
+          <Text style={styles.fabLabel}>{fab.label}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -89,7 +91,7 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
 /** A small round icon button for the header's right side. */
 export function HeaderButton({ icon, onPress, label }: { icon: IconName; onPress: () => void; label: string }) {
   return (
-    <Pressable onPress={onPress} hitSlop={10} style={styles.headerButton} accessibilityLabel={label}>
+    <Pressable onPress={onPress} hitSlop={10} style={styles.roundButton} accessibilityLabel={label}>
       <Ionicons name={icon} size={22} color="#FFFFFF" />
     </Pressable>
   );
@@ -99,15 +101,25 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 50,
+    paddingBottom: 22,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
+    overflow: 'hidden',
   },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerText: { flex: 1 },
-  title: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', letterSpacing: -0.2 },
-  subtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 3 },
-  headerButton: {
+  title: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', letterSpacing: -0.4 },
+  subtitle: { color: 'rgba(255,255,255,0.78)', fontSize: 14, marginTop: 3 },
+  goldLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 3,
+    backgroundColor: colors.gold,
+    opacity: 0.85,
+  },
+  roundButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -115,20 +127,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // The scroll area starts inside the header's curved edge, so the first card overlaps it
-  scroll: { marginTop: -32 },
-  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 14 },
+  content: { padding: 20, paddingBottom: 40, gap: 16 },
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 20,
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: colors.primary,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 8px 18px rgba(29, 78, 216, 0.4)',
+    gap: 6,
+    paddingVertical: 14,
+    paddingLeft: 16,
+    paddingRight: 20,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    boxShadow: '0 10px 22px rgba(11, 107, 79, 0.4)',
     elevation: 6,
   },
+  fabLabel: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 });

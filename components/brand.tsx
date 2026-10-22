@@ -3,49 +3,42 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/colors';
 
-type Props = {
-  /** 'light' sits on a navy background, 'dark' on white. */
-  tone?: 'light' | 'dark';
-  size?: 'md' | 'lg';
-  tagline?: boolean;
-};
+/** The app logo: a shield with a gold outline. The same tile is used on the welcome screen, sign-in and register. */
+export function LogoTile({ size = 58 }: { size?: number }) {
+  return (
+    <View style={[styles.tile, { width: size, height: size, borderRadius: size * 0.3 }]}>
+      <Ionicons name="shield-checkmark" size={size * 0.52} color={colors.gold} />
+    </View>
+  );
+}
 
-const SIZES = {
-  md: { tile: 72, icon: 40, name: 28, radius: 22 },
-  lg: { tile: 128, icon: 74, name: 40, radius: 38 },
-};
-
-/** The app logo (shield tile) with the MyDocs RSA name. Same logo on the splash, sign-in and every header. */
-export function BrandMark({ tone = 'dark', size = 'md', tagline = true }: Props) {
-  const s = SIZES[size];
-  const light = tone === 'light';
+/** Logo, name and optional headline. Sits on the dark navy hero. */
+export function BrandMark({ compact = false, headline }: { compact?: boolean; headline?: string }) {
   return (
     <View style={styles.wrap}>
-      <View
-        style={[
-          styles.tile,
-          { width: s.tile, height: s.tile, borderRadius: s.radius },
-          light ? styles.tileLight : styles.tileDark,
-        ]}>
-        <Ionicons name="shield-checkmark" size={s.icon} color={light ? '#FFFFFF' : colors.primary} />
+      <View style={styles.row}>
+        <LogoTile size={compact ? 46 : 58} />
+        <View>
+          <Text style={styles.name}>MyDocs RSA</Text>
+          <Text style={styles.tagline}>Secure document management</Text>
+        </View>
       </View>
-      <Text style={[styles.name, { fontSize: s.name, color: light ? '#FFFFFF' : colors.navy }]}>
-        My<Text style={{ color: light ? '#60A5FA' : colors.primary }}>Docs</Text> RSA
-      </Text>
-      {tagline ? (
-        <Text style={[styles.tagline, { color: light ? 'rgba(255,255,255,0.75)' : colors.muted }]}>
-          Secure document management
-        </Text>
-      ) : null}
+      {headline ? <Text style={styles.headline}>{headline}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 10 },
-  tile: { alignItems: 'center', justifyContent: 'center' },
-  tileLight: { backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)' },
-  tileDark: { backgroundColor: colors.primarySoft },
-  name: { fontWeight: '800', letterSpacing: -0.5 },
-  tagline: { fontSize: 14 },
+  wrap: { gap: 28 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  tile: {
+    backgroundColor: 'rgba(201, 162, 75, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(201, 162, 75, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  name: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
+  tagline: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 1 },
+  headline: { fontSize: 32, lineHeight: 38, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 },
 });

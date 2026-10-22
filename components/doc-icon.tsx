@@ -4,22 +4,22 @@ import { StyleSheet, View } from 'react-native';
 import type { IconName } from '@/components/ui-kit';
 import type { DocumentType } from '@/lib/types';
 
-/** One accent colour per document type (icon tiles). */
+/** One accent colour per document type (icon tiles, small highlights). */
 export const DOC_COLORS: Record<DocumentType, string> = {
-  ID_DOCUMENT: '#1D4ED8',
-  DRIVERS_LICENSE: '#0F766E',
-  PROOF_OF_RESIDENCE: '#7C3AED',
-  ACADEMIC_CERTIFICATE: '#B45309',
-  PROFESSIONAL_DRIVERS_PERMIT: '#BE123C',
+  ID_DOCUMENT: '#1D4E89',
+  DRIVERS_LICENSE: '#0B6B4F',
+  PROOF_OF_RESIDENCE: '#6D3FB2',
+  ACADEMIC_CERTIFICATE: '#A66A12',
+  PROFESSIONAL_DRIVERS_PERMIT: '#B3263E',
 };
 
 /** Dark -> light gradient pairs for the digital cards, so each document type is recognisable at a glance. */
 export const DOC_GRADIENTS: Record<DocumentType, [string, string]> = {
-  ID_DOCUMENT: ['#0B1E5B', '#2563EB'],
-  DRIVERS_LICENSE: ['#064E3B', '#10B981'],
-  PROOF_OF_RESIDENCE: ['#3B1D78', '#8B5CF6'],
-  ACADEMIC_CERTIFICATE: ['#7C3E06', '#F59E0B'],
-  PROFESSIONAL_DRIVERS_PERMIT: ['#7F1230', '#F43F5E'],
+  ID_DOCUMENT: ['#0A1F44', '#1F5FA8'],
+  DRIVERS_LICENSE: ['#073B2D', '#14946D'],
+  PROOF_OF_RESIDENCE: ['#2A1659', '#7A4FC9'],
+  ACADEMIC_CERTIFICATE: ['#4A2A06', '#C58A2B'],
+  PROFESSIONAL_DRIVERS_PERMIT: ['#4A0E1C', '#C23A55'],
 };
 
 const DOC_ICONS: Record<DocumentType, IconName> = {
@@ -32,9 +32,9 @@ const DOC_ICONS: Record<DocumentType, IconName> = {
 
 /** A rounded tile with an icon that matches the document type. */
 export function DocIcon({ type, size = 46 }: { type: DocumentType; size?: number }) {
-  const color = DOC_COLORS[type] ?? '#1D4ED8';
+  const color = DOC_COLORS[type] ?? '#1D4E89';
   return (
-    <View style={[styles.tile, { width: size, height: size, backgroundColor: `${color}14`, borderColor: `${color}30` }]}>
+    <View style={[styles.tile, { width: size, height: size, backgroundColor: `${color}1A`, borderColor: `${color}33` }]}>
       <Ionicons name={DOC_ICONS[type] ?? 'document-text-outline'} size={size * 0.52} color={color} />
     </View>
   );

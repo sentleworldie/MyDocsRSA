@@ -4,12 +4,13 @@ import { Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from
 
 import { CredentialStatusBadge } from '@/components/badge';
 import { DOC_GRADIENTS } from '@/components/doc-icon';
+import { colors } from '@/constants/colors';
 import { formatDate } from '@/lib/format';
 import { documentTypeLabel, type Credential, type CredentialStatus } from '@/lib/types';
 
 type Props = { credential: Credential; holderName: string; style?: StyleProp<ViewStyle> };
 
-const INACTIVE_GRADIENT: [string, string] = ['#334155', '#64748B'];
+const INACTIVE_GRADIENT: [string, string] = ['#2F3A44', '#6B7782'];
 const RINGS = [0, 1, 2, 3, 4, 5, 6];
 const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
@@ -20,8 +21,9 @@ const SEAL_ICON: Record<CredentialStatus, 'shield-checkmark' | 'time' | 'ban'> =
 };
 
 /**
- * The digital card for a verified document: ID-1 proportions (like a bank card), a fine ring
- * pattern in the corner and a seal with the app's shield. Pass a width through `style`.
+ * The digital card for a verified document. ID-1 proportions (like a bank card), a fine ring
+ * pattern in the corner (a nod to the security printing on banknotes and IDs) and a gold seal.
+ * Pass a width through `style`; the height follows from the aspect ratio.
  */
 export function CredentialCard({ credential, holderName, style }: Props) {
   const active = credential.status === 'ACTIVE';
@@ -44,7 +46,7 @@ export function CredentialCard({ credential, holderName, style }: Props) {
 
         <View style={styles.top}>
           <View style={styles.brand}>
-            <Ionicons name="shield-checkmark" size={16} color="#FFFFFF" />
+            <Ionicons name="shield-checkmark" size={16} color={colors.gold} />
             <Text style={styles.brandText}>MyDocs RSA</Text>
           </View>
           <CredentialStatusBadge status={credential.status} />
@@ -70,8 +72,9 @@ export function CredentialCard({ credential, holderName, style }: Props) {
           </View>
         </View>
 
-        <View style={styles.seal}>
-          <Ionicons name={SEAL_ICON[credential.status]} size={26} color="#FFFFFF" />
+        {/* The seal: the single gold object on the card */}
+        <View style={[styles.seal, !active ? styles.sealMuted : null]}>
+          <Ionicons name={SEAL_ICON[credential.status]} size={26} color={active ? colors.gold : '#FFFFFF'} />
         </View>
       </LinearGradient>
     </View>
@@ -79,7 +82,7 @@ export function CredentialCard({ credential, holderName, style }: Props) {
 }
 
 const styles = StyleSheet.create({
-  shadow: { borderRadius: 22, boxShadow: '0 12px 26px rgba(11, 30, 91, 0.25)', elevation: 6 },
+  shadow: { borderRadius: 22, boxShadow: '0 14px 28px rgba(10, 31, 68, 0.22)', elevation: 6 },
   card: {
     aspectRatio: 1.586,
     borderRadius: 22,
@@ -88,7 +91,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   ringAnchor: { position: 'absolute', top: 24, right: 24, width: 0, height: 0 },
-  ring: { position: 'absolute', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
+  ring: { position: 'absolute', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   brandText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13, letterSpacing: 0.3 },
@@ -105,10 +108,11 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.7)',
+    borderColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sealMuted: { borderColor: 'rgba(255,255,255,0.5)' },
 });

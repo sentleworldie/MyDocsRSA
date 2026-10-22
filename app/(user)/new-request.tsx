@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#93B4F5',
+    borderColor: '#7DB9A3',
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     paddingVertical: 28,

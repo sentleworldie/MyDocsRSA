@@ -11,7 +11,7 @@ export function tabIcon(active: IconName, inactive: IconName) {
   };
 }
 
-/** Shared look of the bottom tab bar: white, royal-blue when selected. */
+/** Shared look of the bottom tab bar: white, emerald when selected. */
 export const tabScreenOptions = {
   headerShown: false,
   tabBarActiveTintColor: colors.primary,

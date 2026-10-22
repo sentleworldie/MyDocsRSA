@@ -1,8 +1,8 @@
-import { Redirect } from "expo-router";
-import { useEffect, useState } from "react";
+import { Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
 
-import { Splash } from "@/components/splash";
-import { useAuth } from "@/context/AuthContext";
+import { Splash } from '@/components/splash';
+import { useAuth } from '@/context/AuthContext';
 
 // The welcome screen only shows once per app launch, not after every sign-in
 let splashShown = false;
@@ -20,7 +20,7 @@ export default function Index() {
     const timer = setTimeout(() => {
       splashShown = true;
       setReady(true);
-    }, 4400);
+    }, 1400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -28,11 +28,11 @@ export default function Index() {
   if (!user) return <Redirect href="/login" />;
 
   switch (user.role) {
-    case "ADMIN":
+    case 'ADMIN':
       return <Redirect href="/overview" />;
-    case "POLICE_OFFICER":
+    case 'POLICE_OFFICER':
       return <Redirect href="/queue" />;
     default:
-      return <Redirect href="/home" />;
+      return <Redirect href="/wallet" />;
   }
 }
