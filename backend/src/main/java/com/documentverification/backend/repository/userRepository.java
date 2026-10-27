@@ -8,8 +8,6 @@ import com.documentverification.backend.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByEmail(String email);
-
     /**
 
      * Checks whether the specified MyDocs RSA document relationship already exists.
@@ -17,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
 
     boolean existsByEmail(String email);
+
+    Optional<User> findByEmail(String email);
 }
