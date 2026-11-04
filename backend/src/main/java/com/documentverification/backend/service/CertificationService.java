@@ -18,6 +18,7 @@ import com.documentverification.backend.repository.DigitalCredentialRepository;
 import com.documentverification.backend.repository.UserRepository;
 
 @Service
+@org.springframework.transaction.annotation.Transactional
 public class CertificationService {
     private final CertificationRequestRepository requestRepository;
     private final DigitalCredentialRepository credentialRepository;
@@ -38,6 +39,12 @@ public class CertificationService {
     }
 
     public Object createRequest(Long userId, DocumentType type, boolean hasCertifiedCopy, MultipartFile file) {
+        return createRequest(userId, type, hasCertifiedCopy, file, null);
+    }
+
+    public Object createRequest(Long userId, DocumentType type, boolean hasCertifiedCopy, MultipartFile file, String otherDescription) {
+        if (type == DocumentType.OTHER && (otherDescription == null || otherDescription.trim().length() < 3 || otherDescription.trim().length() > 120))
+            throw new IllegalArgumentException("Specify the other document type (3–120 characters)");
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         // If this exact previously-verified file already has an active credential,
@@ -45,15 +52,17 @@ public class CertificationService {
         String fingerprint = fingerprint(file);
         for (DigitalCredential c : credentialRepository.findByUserOrderByIssuedAtDesc(user)) {
             if (c.getDocument().getDocumentType() == type
+                    && (type != DocumentType.OTHER || java.util.Objects.equals(c.getDocument().getOtherDescription(), otherDescription.trim()))
                     && c.getDocument().getFileFingerprint() != null
                     && c.getDocument().getFileFingerprint().equals(fingerprint)
                     && c.getStatus() == com.documentverification.backend.entity.CredentialStatus.ACTIVE
-                    && c.getValidUntil().isAfter(java.time.LocalDateTime.now())) {
+                    && c.getValidUntil() != null && c.getValidUntil().isAfter(java.time.LocalDateTime.now())) {
                 return c;
             }
         }
 
         Document document = documentService.uploadDocument(userId, type, file, hasCertifiedCopy);
+        document.setOtherDescription(type == DocumentType.OTHER ? otherDescription.trim() : null);
         CertificationRequest request = new CertificationRequest();
         request.setUser(user);
         request.setDocument(document);
@@ -73,6 +82,7 @@ public class CertificationService {
 
         Document next = documentService.resubmitDocument(r.getDocument().getId(), file);
         r.setDocument(next);
+        r.setReviewedById(null); r.setReviewedByName(null); r.setReviewedAt(null);
         r.setStatus(CertificationRequestStatus.SUBMITTED);
         r.setNotes(null);
         r.touch();
@@ -90,6 +100,14 @@ public class CertificationService {
 
     public List<CertificationRequest> getInReviewRequests() {
         return requestRepository.findByStatusOrderByCreatedAtAsc(CertificationRequestStatus.UNDER_REVIEW);
+    }
+
+    public void cancelRequest(Long id, Long userId) {
+        CertificationRequest r = getRequest(id);
+        if (!r.getUser().getId().equals(userId)) throw new IllegalArgumentException("You cannot cancel another user's request");
+        if (r.getStatus() != CertificationRequestStatus.SUBMITTED && r.getStatus() != CertificationRequestStatus.RESUBMISSION_REQUIRED && r.getStatus() != CertificationRequestStatus.REJECTED)
+            throw new IllegalArgumentException("Only pending, returned or rejected requests can be removed");
+        documentService.deleteDocumentForUser(r.getDocument().getId(), userId);
     }
 
     public CertificationRequest startReview(Long id, User officer) {
@@ -125,7 +143,7 @@ public class CertificationService {
     }
 
     public CertificationRequest reject(Long id, String reason, User officer) {
-        if (reason == null || reason.isBlank()) throw new RuntimeException("A rejection reason is required");
+        if (reason == null || reason.isBlank() || reason.trim().length() > 255) throw new RuntimeException("A rejection reason of 1–255 characters is required");
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.UNDER_REVIEW) throw new RuntimeException("Only requests under review can be rejected");
         r.setStatus(CertificationRequestStatus.REJECTED);
@@ -136,7 +154,7 @@ public class CertificationService {
     }
 
     public CertificationRequest requestMoreInformation(Long id, String reason, User officer) {
-        if (reason == null || reason.isBlank()) throw new RuntimeException("A reason is required");
+        if (reason == null || reason.isBlank() || reason.trim().length() > 255) throw new RuntimeException("A reason of 1–255 characters is required");
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.UNDER_REVIEW) throw new RuntimeException("Only requests under review can request more information");
         r.setStatus(CertificationRequestStatus.RESUBMISSION_REQUIRED);

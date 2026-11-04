@@ -129,6 +129,7 @@ public class DocumentService {
         Document next = new Document();
         next.setUser(previous.getUser());
         next.setDocumentType(previous.getDocumentType());
+        next.setOtherDescription(previous.getOtherDescription());
         next.setDocumentName(originalFileName);
         next.setStatus(VerificationStatus.PENDING);
         next.setOriginalFileName(originalFileName);

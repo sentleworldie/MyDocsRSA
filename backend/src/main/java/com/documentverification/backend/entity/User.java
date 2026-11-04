@@ -18,6 +18,22 @@ import jakarta.persistence.Table;
  * Represents a MyDocs RSA account. The role controls whether the account is a normal user, police officer or administrator.
  */
 public class User {
+    private Long authVersion = 0L;
+    public long getAuthVersion() { return authVersion == null ? 0L : authVersion; }
+    public void invalidateSessions() { authVersion = getAuthVersion() + 1; }
+    private String resetCodeHash;
+    private java.time.LocalDateTime resetExpiresAt;
+    private java.time.LocalDateTime resetSentAt;
+    private int resetAttempts;
+    public String getResetCodeHash() { return resetCodeHash; }
+    public void setResetCodeHash(String v) { resetCodeHash = v; }
+    public java.time.LocalDateTime getResetExpiresAt() { return resetExpiresAt; }
+    public void setResetExpiresAt(java.time.LocalDateTime v) { resetExpiresAt = v; }
+    public java.time.LocalDateTime getResetSentAt() { return resetSentAt; }
+    public void setResetSentAt(java.time.LocalDateTime v) { resetSentAt = v; }
+    public int getResetAttempts() { return resetAttempts; }
+    public void setResetAttempts(int v) { resetAttempts = v; }
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

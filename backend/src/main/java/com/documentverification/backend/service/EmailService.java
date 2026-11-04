@@ -8,6 +8,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
+    public void sendPasswordReset(String to, String code) {
+        if (senderEmail == null || senderEmail.isBlank())
+            throw new IllegalStateException("SMTP sender is not configured");
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderEmail); message.setTo(to); message.setSubject("MyDocs RSA password reset");
+        message.setText("Your password reset code is " + code + ". It expires in 10 minutes. If you did not request this, ignore this email.");
+        mailSender.send(message);
+    }
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")

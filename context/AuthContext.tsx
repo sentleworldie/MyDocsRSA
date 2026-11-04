@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 import { apiRequest, setUnauthorizedHandler } from '@/lib/api';
-import { clearSession, getStoredUser, getToken, saveSession } from '@/lib/storage';
+import { clearSession, getStoredUser, getToken, saveReturning, saveSession } from '@/lib/storage';
 
 export type Role = 'USER' | 'POLICE_OFFICER' | 'ADMIN';
 
@@ -79,6 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token, userId, fullName, email, role } = data;
     const sessionUser: AuthUser = { userId, fullName, email, role };
     await saveSession(token, sessionUser);
+    // Remember this phone has been used, so the sign-in screen says "Welcome back" only to returning people
+    saveReturning({ email, firstName: fullName.trim().split(/\s+/)[0] ?? '' }).catch(() => {});
     setUser(sessionUser);
   }, []);
 

@@ -141,7 +141,11 @@ export async function apiUpload<T>(path: string, options: UploadOptions): Promis
       status = response.status;
       text = await response.text();
     } else {
-      const result = await new FsFile(file.uri).upload(url, {
+      const localFile = new FsFile(file.uri);
+      if (!localFile.exists) {
+        throw new ApiError('This document is no longer available. Choose the file again before uploading.', 0);
+      }
+      const result = await localFile.upload(url, {
         httpMethod: 'POST',
         uploadType: UploadType.MULTIPART,
         fieldName,
@@ -154,6 +158,10 @@ export async function apiUpload<T>(path: string, options: UploadOptions): Promis
     }
   } catch (e) {
     console.warn(`[api] upload ${path} failed:`, e);
+    if (e instanceof ApiError) throw e;
+    if (e instanceof Error && /permission|not readable|no such file|does not exist/i.test(e.message)) {
+      throw new ApiError('The app cannot read this document. Choose the file again; for a cloud document, download it to this phone first.', 0);
+    }
     if (await serverIsReachable()) {
       throw new ApiError(
         'The server is running, but the upload failed. Choose the file again and retry, or try a smaller file.',

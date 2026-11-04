@@ -20,6 +20,7 @@ public record CredentialResponse(
         Long credentialId,
         Long documentId,
         String documentType,
+        String otherDescription,
         String status,
         String verificationCode,
         LocalDateTime issuedAt,
@@ -35,7 +36,7 @@ public record CredentialResponse(
         if (c.getValidUntil() != null && c.getValidUntil().isBefore(LocalDateTime.now()) && "ACTIVE".equals(status)) {
             status = "EXPIRED";
         }
-        return new CredentialResponse(c.getId(), c.getDocument().getId(), c.getDocument().getDocumentType().name(),
+        return new CredentialResponse(c.getId(), c.getDocument().getId(), c.getDocument().getDocumentType().name(), c.getDocument().getOtherDescription(),
                 status, c.getVerificationCode(), c.getIssuedAt(), c.getValidUntil());
     }
 }

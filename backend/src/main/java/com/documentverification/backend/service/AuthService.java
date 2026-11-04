@@ -65,6 +65,7 @@ public class AuthService {
             throw new RuntimeException("Email address is already registered");
         }
 
+        PasswordPolicy.validate(request.getPassword(), request.getEmail(), request.getFullName());
         User user = new User();
 
         user.setFullName(request.getFullName());
@@ -151,7 +152,10 @@ public class AuthService {
         }
 
         if (password != null && !password.isBlank()) {
+            PasswordPolicy.validate(password, user.getEmail(), user.getFullName());
             user.setPassword(passwordEncoder.encode(password));
+            user.invalidateSessions();
+            user.setResetCodeHash(null); user.setResetExpiresAt(null);
         }
 
         return userRepository.save(user);

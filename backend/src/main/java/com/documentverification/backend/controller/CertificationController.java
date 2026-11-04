@@ -42,12 +42,13 @@ public class CertificationController {
     @PostMapping("/requests")
     public ResponseEntity<?> createRequest(@RequestParam DocumentType documentType,
                                             @RequestParam boolean hasCertifiedCopy,
+                                            @RequestParam(required = false) String otherDescription,
                                             @RequestParam MultipartFile file,
                                             Authentication authentication) {
         try {
             User user = currentUser(authentication);
             if (user.getRole() != Role.USER) return forbidden();
-            Object result = certificationService.createRequest(user.getId(), documentType, hasCertifiedCopy, file);
+            Object result = certificationService.createRequest(user.getId(), documentType, hasCertifiedCopy, file, otherDescription);
             if (result instanceof DigitalCredential credential) {
                 return ResponseEntity.ok(Map.of(
                         "message", "This document already has a valid digital credential",
@@ -78,6 +79,16 @@ public class CertificationController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/requests/{id}")
+    public ResponseEntity<?> cancel(@PathVariable Long id, Authentication authentication) {
+        try {
+            User user = currentUser(authentication);
+            if (user.getRole() != Role.USER) return forbidden();
+            certificationService.cancelRequest(id, user.getId());
+            return ResponseEntity.ok(Map.of("message", "Request removed"));
+        } catch (RuntimeException e) { return ResponseEntity.badRequest().body(Map.of("message", e.getMessage())); }
     }
 
     @GetMapping("/requests/me")

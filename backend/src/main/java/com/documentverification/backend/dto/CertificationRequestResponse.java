@@ -20,6 +20,7 @@ public record CertificationRequestResponse(
         Long requestId,
         Long documentId,
         String documentType,
+        String otherDescription,
         boolean hasCertifiedCopy,
         String processingPath,
         String status,
@@ -38,7 +39,7 @@ public record CertificationRequestResponse(
 
     public static CertificationRequestResponse from(CertificationRequest r) {
         return new CertificationRequestResponse(r.getId(), r.getDocument().getId(),
-                r.getDocument().getDocumentType().name(), r.isHasCertifiedCopy(),
+                r.getDocument().getDocumentType().name(), r.getDocument().getOtherDescription(), r.isHasCertifiedCopy(),
                 r.getProcessingPath().name(), r.getStatus().name(), r.getCreatedAt(), r.getUpdatedAt(), r.getNotes(),
                 r.getUser().getFullName(), r.getDocument().getOriginalFileName(),
                 r.getReviewedByName(), r.getReviewedAt());

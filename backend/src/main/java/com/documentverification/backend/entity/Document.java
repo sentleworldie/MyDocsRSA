@@ -54,6 +54,11 @@ public class Document {
 
     private String rejectionReason;
 
+    @Column(length = 120)
+    private String otherDescription;
+    public String getOtherDescription() { return otherDescription; }
+    public void setOtherDescription(String value) { otherDescription = value; }
+
     @Column(name = "has_certified_copy", nullable = false)
     private boolean hasCertifiedCopy;
 

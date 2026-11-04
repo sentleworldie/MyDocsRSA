@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { ApiError } from '@/lib/api';
 import { resubmitRequest } from '@/lib/certification';
 import { pickDocument, validateFile } from '@/lib/files';
 
@@ -26,7 +25,7 @@ export function useResubmit(requestId: number, onDone: () => void) {
       await resubmitRequest(requestId, file);
       onDone();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not upload the file. Try again.');
+      setError(e instanceof Error ? e.message : 'Could not upload the file. Try again.');
     } finally {
       setBusy(false);
     }

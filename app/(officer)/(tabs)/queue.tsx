@@ -10,7 +10,7 @@ import { RequestRow } from '@/components/request-row';
 import { SearchField } from '@/components/search-field';
 import { cardShadow, colors, radius } from '@/constants/colors';
 import { fetchOfficerQueue } from '@/lib/officer';
-import { documentTypeLabel, type CertificationRequest } from '@/lib/types';
+import { requestTitle, type CertificationRequest } from '@/lib/types';
 import { useLoad } from '@/lib/use-load';
 
 type Tab = 'WAITING' | 'REVIEW';
@@ -23,7 +23,7 @@ export default function OfficerQueueScreen() {
 
   const q = search.trim().toLowerCase();
   const matches = (r: CertificationRequest) =>
-    !q || (r.applicantName ?? '').toLowerCase().includes(q) || documentTypeLabel(r.documentType).toLowerCase().includes(q);
+    !q || (r.applicantName ?? '').toLowerCase().includes(q) || requestTitle(r).toLowerCase().includes(q);
 
   const allPending = queue.data?.pending ?? [];
   const allInReview = queue.data?.inReview ?? [];

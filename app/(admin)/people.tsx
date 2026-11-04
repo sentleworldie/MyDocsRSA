@@ -6,6 +6,7 @@ import { LoadError } from '@/components/load-error';
 import { Page } from '@/components/page';
 import { PersonCard } from '@/components/person-card';
 import { SearchField } from '@/components/search-field';
+import { InsightCard } from '@/components/segment-bar';
 import { colors } from '@/constants/colors';
 import type { Role } from '@/context/AuthContext';
 import { fetchAdminUsers } from '@/lib/admin';
@@ -35,6 +36,15 @@ export default function PeopleScreen() {
       subtitle="Promote a user to officer from the Users list."
       refreshing={people.refreshing}
       onRefresh={people.refresh}>
+      <InsightCard
+        title="Who is on the system"
+        segments={[
+          { label: 'Users', value: count('USER'), color: '#1D4E89' },
+          { label: 'Officers', value: count('POLICE_OFFICER'), color: '#0B6B4F' },
+          { label: 'Admins', value: count('ADMIN'), color: '#B8902F' },
+          { label: 'Inactive', value: all.filter((p) => !p.active).length, color: '#B42318' },
+        ]}
+      />
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by name or email" />
       <FilterChips chips={chips} selected={role} onSelect={setRole} />
 

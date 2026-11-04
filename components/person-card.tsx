@@ -65,9 +65,11 @@ export function PersonCard({ person, onChanged }: Props) {
 
   return (
     <View style={styles.card}>
+      <View style={[styles.edge, { backgroundColor: person.active ? accent : colors.faint }]} />
       <View style={styles.top}>
-        <View style={[styles.avatar, { backgroundColor: `${accent}1A` }]}>
+        <View style={[styles.avatar, { backgroundColor: `${accent}1A`, borderWidth: 2, borderColor: `${accent}55` }]}>
           <Text style={[styles.avatarText, { color: accent }]}>{initials(person.fullName)}</Text>
+          <View style={[styles.statusDot, { backgroundColor: person.active ? '#22C55E' : colors.faint }]} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.name} numberOfLines={1}>
@@ -140,10 +142,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 14,
+    paddingVertical: 14,
+    paddingRight: 14,
+    paddingLeft: 19,
     gap: 4,
+    overflow: 'hidden',
     ...cardShadow,
   },
+  edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 5 },
+  statusDot: { position: 'absolute', right: -2, bottom: -2, width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#FFFFFF' },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 16, fontWeight: '800' },

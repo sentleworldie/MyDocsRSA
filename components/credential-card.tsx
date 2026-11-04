@@ -53,7 +53,7 @@ export function CredentialCard({ credential, holderName, style }: Props) {
         </View>
 
         <View style={styles.middle}>
-          <Text style={styles.type}>{documentTypeLabel(credential.documentType)}</Text>
+          <Text style={styles.type}>{documentTypeLabel(credential.documentType, credential.otherDescription)}</Text>
           <Text style={styles.holder} numberOfLines={1}>
             {holderName}
           </Text>

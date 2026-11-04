@@ -34,6 +34,7 @@ export type AdminCredential = {
   holderName: string;
   holderEmail: string;
   documentType: DocumentType;
+  otherDescription?: string | null;
   status: CredentialStatus;
   verificationCode: string;
   issuedAt: string;

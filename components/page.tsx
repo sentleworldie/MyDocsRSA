@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DotGrid, Rings } from '@/components/texture';
 import type { IconName } from '@/components/ui-kit';
 import { colors } from '@/constants/colors';
 
@@ -40,6 +41,8 @@ export function Page({ title, subtitle, back, right, children, refreshing = fals
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + 14 }]}>
+        <DotGrid cols={10} rows={6} gap={16} style={{ right: 6, bottom: 8 }} />
+        <Rings count={5} base={64} step={34} top={8} right={36} color="rgba(201,162,75,0.16)" />
         <View style={styles.headerRow}>
           {back ? (
             <Pressable

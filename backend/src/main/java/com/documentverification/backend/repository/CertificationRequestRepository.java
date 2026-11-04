@@ -9,6 +9,9 @@ import com.documentverification.backend.entity.CertificationRequestStatus;
 import com.documentverification.backend.entity.User;
 
 public interface CertificationRequestRepository extends JpaRepository<CertificationRequest, Long> {
+    @Override
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    java.util.Optional<CertificationRequest> findById(Long id);
     List<CertificationRequest> findByUserOrderByCreatedAtDesc(User user);
     List<CertificationRequest> findByStatusOrderByCreatedAtAsc(CertificationRequestStatus status);
 

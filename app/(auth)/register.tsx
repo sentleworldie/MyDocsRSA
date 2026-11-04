@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '@/components/brand';
+import { PasswordStrength } from '@/components/password-strength';
 import { Banner, Button, Field, Screen, textStyles } from '@/components/ui-kit';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
+import { checkPassword } from '@/lib/password';
 
 export default function RegisterScreen() {
   const { register } = useAuth();
@@ -14,16 +16,17 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Same rules as the backend (RegisterRequest) so people get instant feedback
   function validate() {
     const errors: Record<string, string> = {};
     if (!fullName.trim()) errors.fullName = 'Full name is required';
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) errors.email = 'Enter a valid email address';
-    if (password.length < 8) errors.password = 'Password must be at least 8 characters';
+    if (!checkPassword(password, { email, name: fullName }).valid) errors.password = 'Choose a stronger password (see the checklist)';
+    if (confirm !== password) errors.confirm = 'The two passwords do not match';
     return errors;
   }
 
@@ -70,7 +73,7 @@ export default function RegisterScreen() {
         onChangeText={setPhoneNumber}
         error={fieldErrors.phoneNumber}
         keyboardType="phone-pad"
-        placeholder="0XX XXX XXXX"
+        placeholder="+27 12 345 6789"
       />
       <Field
         label="Password"
@@ -78,7 +81,16 @@ export default function RegisterScreen() {
         onChangeText={setPassword}
         error={fieldErrors.password}
         secureTextEntry
-        placeholder="At least 8 characters"
+        placeholder="Create a strong password"
+      />
+      <PasswordStrength password={password} email={email} name={fullName} />
+      <Field
+        label="Confirm password"
+        value={confirm}
+        onChangeText={setConfirm}
+        error={fieldErrors.confirm}
+        secureTextEntry
+        placeholder="Type it again"
       />
 
       {error ? (
@@ -92,9 +104,9 @@ export default function RegisterScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={{ color: colors.muted }}>Already registered?</Text>
+        <Text style={{ color: colors.muted }}>Already have an account?</Text>
         <Link href="./login" style={textStyles.link}>
-          Log In
+          Log in
         </Link>
       </View>
     </Screen>

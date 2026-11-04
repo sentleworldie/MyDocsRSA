@@ -18,6 +18,7 @@ export async function fetchMyDocuments() {
 
 export function submitRequest(input: {
   documentType: DocumentType;
+  otherDescription?: string; // required when documentType is OTHER
   hasCertifiedCopy: boolean;
   file: PickedFile;
 }) {
@@ -26,6 +27,7 @@ export function submitRequest(input: {
     fields: {
       documentType: input.documentType,
       hasCertifiedCopy: String(input.hasCertifiedCopy),
+      ...(input.otherDescription ? { otherDescription: input.otherDescription } : {}),
     },
   });
 }
@@ -35,4 +37,9 @@ export function resubmitRequest(requestId: number, file: PickedFile) {
     `/api/certification/requests/${requestId}/resubmit`,
     { file },
   );
+}
+
+/** Cancel a request that has not been picked up yet, or remove a rejected one from the list. */
+export function cancelRequest(requestId: number) {
+  return apiRequest<{ message?: string } | null>(`/api/certification/requests/${requestId}`, { method: 'DELETE' });
 }

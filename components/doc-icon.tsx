@@ -11,6 +11,7 @@ export const DOC_COLORS: Record<DocumentType, string> = {
   PROOF_OF_RESIDENCE: '#6D3FB2',
   ACADEMIC_CERTIFICATE: '#A66A12',
   PROFESSIONAL_DRIVERS_PERMIT: '#B3263E',
+  OTHER: '#475569',
 };
 
 /** Dark -> light gradient pairs for the digital cards, so each document type is recognisable at a glance. */
@@ -20,14 +21,16 @@ export const DOC_GRADIENTS: Record<DocumentType, [string, string]> = {
   PROOF_OF_RESIDENCE: ['#2A1659', '#7A4FC9'],
   ACADEMIC_CERTIFICATE: ['#4A2A06', '#C58A2B'],
   PROFESSIONAL_DRIVERS_PERMIT: ['#4A0E1C', '#C23A55'],
+  OTHER: ['#1F2937', '#6B7280'],
 };
 
-const DOC_ICONS: Record<DocumentType, IconName> = {
+export const DOC_ICONS: Record<DocumentType, IconName> = {
   ID_DOCUMENT: 'card-outline',
   DRIVERS_LICENSE: 'car-outline',
   PROOF_OF_RESIDENCE: 'home-outline',
   ACADEMIC_CERTIFICATE: 'school-outline',
   PROFESSIONAL_DRIVERS_PERMIT: 'bus-outline',
+  OTHER: 'document-text-outline',
 };
 
 /** A rounded tile with an icon that matches the document type. */

@@ -3,10 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RequestStatusBadge } from '@/components/badge';
 import { DocIcon } from '@/components/doc-icon';
+import { ReasonCard } from '@/components/reason-card';
 import { Banner, Button } from '@/components/ui-kit';
 import { cardShadow, colors, radius } from '@/constants/colors';
 import { formatDate } from '@/lib/format';
-import { documentTypeLabel, type CertificationRequest, type RequestStatus } from '@/lib/types';
+import { requestTitle, type CertificationRequest, type RequestStatus } from '@/lib/types';
+import { useCancel } from '@/lib/use-cancel';
 import { useResubmit } from '@/lib/use-resubmit';
 
 // 0 = submitted, 1 = being reviewed, 2 = decision made
@@ -26,6 +28,7 @@ type Props = {
 
 export function RequestCard({ request, onPress, onChanged }: Props) {
   const resubmit = useResubmit(request.requestId, onChanged);
+  const cancel = useCancel(request, onChanged);
   const step = progressStep(request.status);
   const failed = request.status === 'REJECTED' || request.status === 'RESUBMISSION_REQUIRED';
 
@@ -35,7 +38,7 @@ export function RequestCard({ request, onPress, onChanged }: Props) {
         <DocIcon type={request.documentType} size={44} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title} numberOfLines={1}>
-            {documentTypeLabel(request.documentType)}
+            {requestTitle(request)}
           </Text>
           <Text style={styles.meta} numberOfLines={1}>
             {formatDate(request.createdAt)} ·{' '}
@@ -74,13 +77,23 @@ export function RequestCard({ request, onPress, onChanged }: Props) {
       {request.status === 'APPROVED' ? (
         <Banner kind="success" message="Verified. Your digital card is ready in My Documents." />
       ) : null}
-      {failed && request.notes ? <Banner message={`Officer note: ${request.notes}`} /> : null}
+      {failed ? <ReasonCard request={request} compact /> : null}
 
       {request.status === 'RESUBMISSION_REQUIRED' ? (
         <>
           {resubmit.error ? <Banner message={resubmit.error} /> : null}
           <Button title="Upload corrected document" icon="cloud-upload-outline" onPress={resubmit.start} loading={resubmit.busy} />
         </>
+      ) : null}
+
+      {cancel.error ? <Banner message={cancel.error} /> : null}
+      {cancel.kind ? (
+        <Pressable onPress={cancel.start} disabled={cancel.busy} style={styles.cancel}>
+          <Ionicons name="trash-outline" size={16} color={colors.danger} />
+          <Text style={styles.cancelText}>{cancel.busy ? 'Working...' : cancel.label}</Text>
+        </Pressable>
+      ) : request.status === 'UNDER_REVIEW' || request.status === 'INVESTIGATION_REQUIRED' ? (
+        <Text style={styles.locked}>An officer is already reviewing this, so it can no longer be cancelled.</Text>
       ) : null}
     </View>
   );
@@ -104,4 +117,7 @@ const styles = StyleSheet.create({
   dot: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   progressLabel: { fontSize: 11, color: colors.muted },
   progressLabelOn: { color: colors.text, fontWeight: '700' },
+  cancel: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 },
+  cancelText: { fontSize: 13, fontWeight: '700', color: colors.danger },
+  locked: { fontSize: 12, color: colors.muted, textAlign: 'center' },
 });

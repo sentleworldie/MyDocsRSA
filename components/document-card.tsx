@@ -5,7 +5,7 @@ import { RequestStatusBadge } from '@/components/badge';
 import { DocIcon } from '@/components/doc-icon';
 import { cardShadow, colors, radius } from '@/constants/colors';
 import { formatDate } from '@/lib/format';
-import { documentTypeLabel, type CertificationRequest, type RequestStatus } from '@/lib/types';
+import { requestTitle, type CertificationRequest, type RequestStatus } from '@/lib/types';
 
 type Props = {
   request: CertificationRequest;
@@ -43,7 +43,7 @@ export function DocumentCard({ request, onPress, onDownload }: Props) {
         <DocIcon type={request.documentType} />
         <View style={styles.body}>
           <Text style={styles.title} numberOfLines={1}>
-            {documentTypeLabel(request.documentType)}
+            {requestTitle(request)}
           </Text>
           <Text style={styles.meta}>Submitted {formatDate(request.createdAt)}</Text>
         </View>
@@ -58,6 +58,13 @@ export function DocumentCard({ request, onPress, onDownload }: Props) {
       <View style={styles.statusRow}>
         <RequestStatusBadge status={request.status} />
       </View>
+
+      {request.status === 'REJECTED' || request.status === 'RESUBMISSION_REQUIRED' ? (
+        <Text style={styles.reason} numberOfLines={2}>
+          {request.status === 'REJECTED' ? 'Reason: ' : 'Needed: '}
+          {request.notes?.trim() || 'No reason given. Tap for details.'}
+        </Text>
+      ) : null}
 
       {!verified ? (
         <View style={styles.track}>
@@ -102,6 +109,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  reason: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.danger,
+    backgroundColor: colors.dangerBg,
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   track: { flexDirection: 'row', gap: 6, marginTop: 2 },
   stepCol: { flex: 1, gap: 5 },

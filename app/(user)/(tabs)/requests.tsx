@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { LoadError } from '@/components/load-error';
@@ -7,16 +8,25 @@ import { Page } from '@/components/page';
 import { RequestCard } from '@/components/request-card';
 import { cardShadow, colors, radius } from '@/constants/colors';
 import { fetchMyRequests } from '@/lib/certification';
+import { useStatusUpdates } from '@/lib/status-updates';
 import { useLoad } from '@/lib/use-load';
 
 export default function RequestsScreen() {
   const router = useRouter();
-  const requests = useLoad(fetchMyRequests);
+  const requests = useLoad(fetchMyRequests, { intervalMs: 15000 });
+  const { acknowledge } = useStatusUpdates();
+
+  // Looking at this tab counts as having seen every update
+  useFocusEffect(
+    useCallback(() => {
+      acknowledge();
+    }, [acknowledge]),
+  );
 
   return (
     <Page
       title="Requests"
-      subtitle="Track every submission. Pull down to refresh."
+      subtitle="Track every submission. Statuses update by themselves."
       refreshing={requests.refreshing}
       onRefresh={requests.refresh}>
       {requests.loading ? (

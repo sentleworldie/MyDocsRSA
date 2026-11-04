@@ -18,10 +18,12 @@ public class JwtService {
 
     private final Key signingKey;
     private final long expirationMs;
+    private final com.documentverification.backend.repository.UserRepository users;
 
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms:86400000}") long expirationMs) {
+            @Value("${app.jwt.expiration-ms:86400000}") long expirationMs, com.documentverification.backend.repository.UserRepository users) {
+        this.users = users;
         if (secret == null || secret.length() < 32) {
             throw new IllegalArgumentException("app.jwt.secret must be at least 32 characters");
         }
@@ -46,6 +48,7 @@ public class JwtService {
                 .subject(user.getEmail())
                 .claim("userId", user.getId())
                 .claim("role", user.getRole().name())
+                .claim("authVersion", user.getAuthVersion())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(signingKey)
@@ -78,7 +81,11 @@ public class JwtService {
         try {
             Claims claims = parseClaims(token);
             return expectedEmail.equals(claims.getSubject())
-                    && claims.getExpiration().after(new Date());
+                    && claims.getExpiration().after(new Date())
+                    && users.findByEmail(expectedEmail).map(user -> {
+                        Number version = claims.get("authVersion", Number.class);
+                        return user.getAuthVersion() == (version == null ? 0L : version.longValue());
+                    }).orElse(false);
         } catch (RuntimeException e) {
             return false;
         }

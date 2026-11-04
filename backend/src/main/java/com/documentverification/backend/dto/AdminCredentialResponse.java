@@ -12,6 +12,7 @@ public record AdminCredentialResponse(
         String holderName,
         String holderEmail,
         String documentType,
+        String otherDescription,
         String status,
         String verificationCode,
         LocalDateTime issuedAt,
@@ -31,7 +32,7 @@ public record AdminCredentialResponse(
 
     public static AdminCredentialResponse from(DigitalCredential c) {
         return new AdminCredentialResponse(c.getId(), c.getUser().getFullName(), c.getUser().getEmail(),
-                c.getDocument().getDocumentType().name(), effectiveStatus(c), c.getVerificationCode(),
+                c.getDocument().getDocumentType().name(), c.getDocument().getOtherDescription(), effectiveStatus(c), c.getVerificationCode(),
                 c.getIssuedAt(), c.getValidUntil(), c.getRevokedAt(), c.getRevocationReason());
     }
 }

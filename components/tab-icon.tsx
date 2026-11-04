@@ -1,5 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import type { ColorValue } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
 
 import type { IconName } from '@/components/ui-kit';
 import { colors } from '@/constants/colors';
@@ -7,7 +8,7 @@ import { colors } from '@/constants/colors';
 /** Builds a tab-bar icon that is filled when its tab is selected and outlined otherwise. */
 export function tabIcon(active: IconName, inactive: IconName) {
   return function TabIcon({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) {
-    return <Ionicons name={focused ? active : inactive} color={color} size={size} />;
+    return <Ionicons name={focused ? active : inactive} color={typeof color === 'string' ? color : colors.faint} size={size} />;
   };
 }
 

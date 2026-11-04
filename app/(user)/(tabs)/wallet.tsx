@@ -22,7 +22,7 @@ export default function DocumentsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { width } = useWindowDimensions();
-  const docs = useLoad(fetchMyDocuments);
+  const docs = useLoad(fetchMyDocuments, { intervalMs: 20000 });
   const [downloadError, setDownloadError] = useState('');
   const [index, setIndex] = useState(0);
 
@@ -56,7 +56,7 @@ export default function DocumentsScreen() {
       right={<HeaderButton icon="person-circle-outline" label="Profile" onPress={() => router.push('/account')} />}
       refreshing={docs.refreshing}
       onRefresh={docs.refresh}
-      fab={{ label: 'Add document', onPress: () => router.push('/new-request') }}>
+      fab={{ label: 'Add document', onPress: () => router.push('/(user)/new-request') }}>
       {docs.loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : docs.error ? (
@@ -71,7 +71,7 @@ export default function DocumentsScreen() {
             Add an ID, licence or certificate. Once an officer verifies it, your digital card appears here.
           </Text>
           <View style={{ alignSelf: 'stretch' }}>
-            <Button title="Add your first document" icon="add-circle-outline" onPress={() => router.push('/new-request')} />
+            <Button title="Add your first document" icon="add-circle-outline" onPress={() => router.push('/(user)/new-request')} />
           </View>
         </View>
       ) : (

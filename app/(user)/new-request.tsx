@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Page } from '@/components/page';
 import { SelectField, type SelectOption } from '@/components/select-field';
-import { Banner, Button } from '@/components/ui-kit';
+import { Banner, Button, Field } from '@/components/ui-kit';
 import { cardShadow, colors, radius } from '@/constants/colors';
 import { ApiError } from '@/lib/api';
 import { submitRequest } from '@/lib/certification';
@@ -13,7 +13,7 @@ import { pickDocument, validateFile, type PickedFile } from '@/lib/files';
 import { formatFileSize } from '@/lib/format';
 import { DOCUMENT_TYPES, type CreateRequestResult, type DocumentType } from '@/lib/types';
 
-type FormErrors = { docType?: string; hasCopy?: string; file?: string };
+type FormErrors = { docType?: string; other?: string; hasCopy?: string; file?: string };
 
 const TYPE_OPTIONS: SelectOption<DocumentType>[] = DOCUMENT_TYPES.map((t) => ({
   value: t.value,
@@ -24,6 +24,7 @@ const TYPE_OPTIONS: SelectOption<DocumentType>[] = DOCUMENT_TYPES.map((t) => ({
 export default function NewRequestScreen() {
   const router = useRouter();
   const [docType, setDocType] = useState<DocumentType | null>(null);
+  const [otherText, setOtherText] = useState('');
   const [hasCopy, setHasCopy] = useState<boolean | null>(null);
   const [file, setFile] = useState<PickedFile | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -43,14 +44,15 @@ export default function NewRequestScreen() {
       }
       setFile(picked);
       setErrors((e) => ({ ...e, file: undefined }));
-    } catch {
-      setErrors((e) => ({ ...e, file: 'Could not open the file picker. Try again.' }));
+    } catch (error) {
+      setErrors((e) => ({ ...e, file: error instanceof Error ? error.message : 'Could not open the file picker. Try again.' }));
     }
   }
 
   async function handleSubmit() {
     const found: FormErrors = {};
     if (!docType) found.docType = 'Choose the type of document.';
+    if (docType === 'OTHER' && (otherText.trim().length < 3 || otherText.trim().length > 120)) found.other = 'Describe the document type using 3–120 characters.';
     if (hasCopy === null) found.hasCopy = 'Tell us whether you have a certified copy.';
     if (!file) found.file = 'Choose the file to upload.';
     setErrors(found);
@@ -59,7 +61,14 @@ export default function NewRequestScreen() {
 
     setLoading(true);
     try {
-      setResult(await submitRequest({ documentType: docType, hasCertifiedCopy: hasCopy, file }));
+      setResult(
+        await submitRequest({
+          documentType: docType,
+          otherDescription: docType === 'OTHER' ? otherText.trim() : undefined,
+          hasCertifiedCopy: hasCopy,
+          file,
+        }),
+      );
     } catch (e) {
       setServerError(e instanceof ApiError ? e.message : 'Something went wrong. Try again.');
     } finally {
@@ -69,6 +78,7 @@ export default function NewRequestScreen() {
 
   function startAnother() {
     setDocType(null);
+    setOtherText('');
     setHasCopy(null);
     setFile(null);
     setErrors({});
@@ -137,6 +147,20 @@ export default function NewRequestScreen() {
         placeholder="Select document type"
         error={errors.docType}
       />
+
+      {docType === 'OTHER' ? (
+        <Field
+          label="What kind of document is it?"
+          value={otherText}
+          onChangeText={(t) => {
+            setOtherText(t);
+            setErrors((e) => ({ ...e, other: undefined }));
+          }}
+          error={errors.other}
+          maxLength={120}
+          placeholder="e.g. Marriage certificate"
+        />
+      ) : null}
 
       <View style={{ gap: 8 }}>
         <Text style={styles.label}>Do you have a certified copy?</Text>
