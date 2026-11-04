@@ -3,18 +3,26 @@ import Constants from 'expo-constants';
 
 /**
  * Backend configuration.
- * Production should use the hosted Render backend.
+ * Production uses Render.
+ * Local development can use EXPO_PUBLIC_API_URL to override it.
  */
+
+const RENDER_API_URL = 'https://mydocsrsa-1.onrender.com';
 const BACKEND_PORT = 8080;
 
 function resolveBaseUrl(): string {
-  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL?.trim();
 
   if (fromEnv) {
     return fromEnv.replace(/\/+$/, '');
   }
 
-  // Local development fallback
+  // Use Render for installed production builds.
+  if (!__DEV__) {
+    return RENDER_API_URL;
+  }
+
+  // Local development fallback for Expo Go.
   const hostUri = Constants.expoConfig?.hostUri;
   const host = hostUri ? hostUri.split(':')[0] : null;
 
