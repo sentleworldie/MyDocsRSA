@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "MyApp",
+    "name": "MyDocsRSA",
     "slug": "MyApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "mydocsrsa",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sentle.mydocsrsa"
     },
     "android": {
+      "package": "com.sentle.mydocsrsa",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
