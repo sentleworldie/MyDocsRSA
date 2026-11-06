@@ -11,7 +11,7 @@ import com.documentverification.backend.repository.*;
 class CertificationServiceTest {
     private final CertificationRequestRepository requests = mock(CertificationRequestRepository.class);
     private final DocumentService documents = mock(DocumentService.class);
-    private final CertificationService service = new CertificationService(requests, mock(DigitalCredentialRepository.class), mock(UserRepository.class), documents, mock(CertifiedDocumentService.class), 6);
+    private final CertificationService service = new CertificationService(requests, mock(DigitalCredentialRepository.class), mock(UserRepository.class), documents, 6);
     private CertificationRequest request(CertificationRequestStatus status) {
         User user = mock(User.class); when(user.getId()).thenReturn(10L);
         Document document = mock(Document.class); when(document.getId()).thenReturn(20L);

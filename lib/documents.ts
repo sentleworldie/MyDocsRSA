@@ -62,39 +62,3 @@ export async function openDocument(documentId: number, fileName?: string | null)
     throw new ApiError('Could not download the document. Check your connection and try again.', 0);
   }
 }
-
-
-/** Downloads the certified/stamped copy for a request using the user's JWT. */
-export async function openCertifiedDocument(requestId: number, fileName?: string | null) {
-  const token = await getToken();
-  if (!token) throw new ApiError('You are signed out. Sign in again.', 401);
-  const url = `${API_BASE_URL}/api/certification/requests/${requestId}/certified-document`;
-  const safeName = (fileName ?? `certified-document-${requestId}.pdf`).replace(/[^\w.\-]/g, '_');
-  const isPdf = safeName.toLowerCase().endsWith('.pdf');
-
-  if (Platform.OS === 'web') {
-    const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!response.ok) throw new ApiError('Could not download the certified document.', response.status);
-    const blob = await response.blob();
-    window.open(URL.createObjectURL(blob), '_blank');
-    return;
-  }
-
-  const target = new FsFile(Paths.cache, `certified-${requestId}-${safeName}`);
-  try {
-    const downloaded = await FsFile.downloadFileAsync(url, target, {
-      headers: { Authorization: `Bearer ${token}` },
-      idempotent: true,
-    });
-    if (!(await Sharing.isAvailableAsync())) {
-      throw new ApiError('This device cannot open files from the app.', 0);
-    }
-    await Sharing.shareAsync(downloaded.uri, {
-      mimeType: isPdf ? 'application/pdf' : 'image/png',
-      dialogTitle: 'Open certified document',
-    });
-  } catch (e) {
-    if (e instanceof ApiError) throw e;
-    throw new ApiError('Could not download the certified document. Try again.', 0);
-  }
-}

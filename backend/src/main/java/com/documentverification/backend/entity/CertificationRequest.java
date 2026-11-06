@@ -65,16 +65,6 @@ public class CertificationRequest {
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
 
-    @Column(name = "certified_file_path", length = 1024)
-    private String certifiedFilePath;
-
-    @Column(name = "certified_file_name", length = 255)
-    private String certifiedFileName;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "stamp_position", length = 30)
-    private StampPosition stampPosition;
-
     /**
 
      * Performs the operation represented by this method.
@@ -214,13 +204,4 @@ public class CertificationRequest {
 
     public LocalDateTime getReviewedAt() { return reviewedAt; }
     public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
-
-    public String getCertifiedFilePath() { return certifiedFilePath; }
-    public void setCertifiedFilePath(String certifiedFilePath) { this.certifiedFilePath = certifiedFilePath; }
-
-    public String getCertifiedFileName() { return certifiedFileName; }
-    public void setCertifiedFileName(String certifiedFileName) { this.certifiedFileName = certifiedFileName; }
-
-    public StampPosition getStampPosition() { return stampPosition; }
-    public void setStampPosition(StampPosition stampPosition) { this.stampPosition = stampPosition; }
 }

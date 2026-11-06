@@ -7,7 +7,7 @@ import { DocumentViewer } from '@/components/document-viewer';
 import { RequestStatusBadge } from '@/components/badge';
 import { requestTitle } from '@/lib/types';
 import { ApiError } from '@/lib/api';
-import { fetchOfficerQueue, startReview, approveRequest, rejectRequest, requestResubmission, type StampPosition } from '@/lib/officer';
+import { fetchOfficerQueue, startReview, approveRequest, rejectRequest, requestResubmission } from '@/lib/officer';
 import { useLoad } from '@/lib/use-load';
 
 export default function ReviewDetails() {
@@ -18,7 +18,6 @@ export default function ReviewDetails() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [stampPosition, setStampPosition] = useState<StampPosition>('BOTTOM_RIGHT');
   async function act(action: 'review' | 'approve' | 'reject' | 'more') {
     if (!request || busy) return;
     setError(''); setMessage('');
@@ -26,7 +25,7 @@ export default function ReviewDetails() {
     setBusy(true);
     try {
       if (action === 'review') await startReview(request.requestId);
-      if (action === 'approve') await approveRequest(request.requestId, stampPosition);
+      if (action === 'approve') await approveRequest(request.requestId);
       if (action === 'reject') await rejectRequest(request.requestId, reason.trim());
       if (action === 'more') await requestResubmission(request.requestId, reason.trim());
       setMessage(action === 'review' ? 'Review started.' : 'Decision saved. The applicant can see the updated status.');
@@ -45,17 +44,6 @@ export default function ReviewDetails() {
       <Text>{request.hasCertifiedCopy ? 'Certified copy supplied' : 'Original document: investigation required'}</Text>
       <DocumentViewer key={request.documentId} documentId={request.documentId} fileName={request.originalFileName} />
       {request.status === 'SUBMITTED' || request.status === 'INVESTIGATION_REQUIRED' ? <Button title="Start review" onPress={() => act('review')} loading={busy} /> : <>
-        <Text style={{ fontSize: 15, fontWeight: '700', marginTop: 8 }}>Choose certification stamp position</Text>
-        <Text style={{ color: '#64748B', fontSize: 13 }}>The fixed MyDocs RSA stamp will be applied to every page of a PDF or to the uploaded image.</Text>
-        {([
-          ['TOP_LEFT', 'Top left'],
-          ['TOP_RIGHT', 'Top right'],
-          ['BOTTOM_LEFT', 'Bottom left'],
-          ['BOTTOM_RIGHT', 'Bottom right'],
-          ['CENTER', 'Centre'],
-        ] as const).map(([value, label]) => (
-          <Button key={value} title={`${stampPosition === value ? '✓ ' : ''}${label}`} variant={stampPosition === value ? 'primary' : 'secondary'} onPress={() => setStampPosition(value)} disabled={busy} />
-        ))}
         <Field label="Reason for rejection or corrected copy" value={reason} onChangeText={setReason} multiline maxLength={255} editable={!busy} />
         <Button title="Approve and issue credential" variant="success" onPress={() => act('approve')} disabled={busy} />
         <Button title="Request corrected copy" variant="secondary" onPress={() => act('more')} disabled={busy} />

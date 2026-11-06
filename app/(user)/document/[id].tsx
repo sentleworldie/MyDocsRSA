@@ -4,8 +4,6 @@ import { Page } from '@/components/page';
 import { Banner, Button } from '@/components/ui-kit';
 import { RequestStatusBadge } from '@/components/badge';
 import { DocumentViewer } from '@/components/document-viewer';
-import { openCertifiedDocument } from '@/lib/documents';
-import { useState } from 'react';
 import { ReasonCard } from '@/components/reason-card';
 import { fetchMyRequests } from '@/lib/certification';
 import { requestTitle, type CertificationRequest } from '@/lib/types';
@@ -18,15 +16,6 @@ function Details({ request, refresh }: { request: CertificationRequest; refresh:
   const router = useRouter();
   const cancel = useCancel(request, () => router.replace('/requests'));
   const resubmit = useResubmit(request.requestId, refresh);
-  const [openingCertified, setOpeningCertified] = useState(false);
-  const [certifiedError, setCertifiedError] = useState('');
-  async function openCertified() {
-    setOpeningCertified(true);
-    setCertifiedError('');
-    try { await openCertifiedDocument(request.requestId, request.certifiedFileName); }
-    catch (e) { setCertifiedError(e instanceof Error ? e.message : 'Could not open certified document.'); }
-    finally { setOpeningCertified(false); }
-  }
   return <>
     <Text style={{ fontSize: 22, fontWeight: '700' }}>{requestTitle(request)}</Text>
     <RequestStatusBadge status={request.status} />
@@ -35,12 +24,6 @@ function Details({ request, refresh }: { request: CertificationRequest; refresh:
     {request.reviewedByName ? <Text>Officer: {request.reviewedByName}</Text> : null}
     {request.status === 'REJECTED' || request.status === 'RESUBMISSION_REQUIRED' ? <ReasonCard request={request} /> : null}
     <DocumentViewer key={request.documentId} documentId={request.documentId} fileName={request.originalFileName} />
-    {request.status === 'APPROVED' && request.certifiedDocumentAvailable ? <>
-      <Text style={{ fontWeight: '700', marginTop: 8 }}>Certified copy</Text>
-      <Text>Your stamped document is ready to view or save.</Text>
-      {certifiedError ? <Banner message={certifiedError} /> : null}
-      <Button title="Open certified document" onPress={openCertified} loading={openingCertified} />
-    </> : null}
     {cancel.error || resubmit.error ? <Banner message={cancel.error || resubmit.error} /> : null}
     {request.status === 'RESUBMISSION_REQUIRED' ? <Button title="Upload corrected document" onPress={resubmit.start} loading={resubmit.busy} disabled={cancel.busy} /> : null}
     {cancel.kind ? <Button title={cancel.label} variant="danger" onPress={cancel.start} loading={cancel.busy} disabled={resubmit.busy} /> : null}

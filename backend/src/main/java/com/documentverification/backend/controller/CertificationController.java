@@ -5,13 +5,6 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +22,6 @@ import com.documentverification.backend.entity.CertificationRequest;
 import com.documentverification.backend.entity.DigitalCredential;
 import com.documentverification.backend.entity.DocumentType;
 import com.documentverification.backend.entity.Role;
-import com.documentverification.backend.entity.StampPosition;
 import com.documentverification.backend.entity.User;
 import com.documentverification.backend.repository.UserRepository;
 import com.documentverification.backend.service.CertificationService;
@@ -127,17 +119,12 @@ public class CertificationController {
         catch (RuntimeException e) { return ResponseEntity.badRequest().body(Map.of("message", e.getMessage())); }
     }
 
-    public record ApproveRequest(@jakarta.validation.constraints.NotNull StampPosition stampPosition) {}
-
     @PutMapping("/requests/{id}/approve")
-    public ResponseEntity<?> approve(@PathVariable Long id, @RequestBody ApproveRequest body, Authentication authentication) {
+    public ResponseEntity<?> approve(@PathVariable Long id, Authentication authentication) {
         if (!isOfficerOrAdmin(authentication)) return forbidden();
         try {
-            if (body == null || body.stampPosition() == null) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Choose a stamp position"));
-            }
             User officer = currentUser(authentication);
-            CertificationRequest request = certificationService.approve(id, officer, body.stampPosition());
+            CertificationRequest request = certificationService.approve(id, officer);
             List<DigitalCredential> credentials = certificationService.getUserCredentials(request.getUser().getId());
             DigitalCredential credential = credentials.stream()
                     .filter(c -> c.getDocument().getId().equals(request.getDocument().getId()))
@@ -160,36 +147,6 @@ public class CertificationController {
         if (!isOfficerOrAdmin(authentication)) return forbidden();
         try { User officer = currentUser(authentication); return ResponseEntity.ok(CertificationRequestResponse.from(certificationService.requestMoreInformation(id, body.reason(), officer))); }
         catch (RuntimeException e) { return ResponseEntity.badRequest().body(Map.of("message", e.getMessage())); }
-    }
-
-    @GetMapping("/requests/{id}/certified-document")
-    public ResponseEntity<?> downloadCertifiedDocument(@PathVariable Long id, Authentication authentication) {
-        try {
-            User user = currentUser(authentication);
-            CertificationRequest request = certificationService.getRequestForDownload(id);
-            boolean allowed = user.getRole() != Role.USER || request.getUser().getId().equals(user.getId());
-            if (!allowed) return forbidden();
-            if (request.getCertifiedFilePath() == null || request.getCertifiedFileName() == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("message", "The certified copy is not available yet"));
-            }
-            Path storage = Paths.get("document-storage").toAbsolutePath().normalize();
-            Path file = Paths.get(request.getCertifiedFilePath()).toAbsolutePath().normalize();
-            if (!file.startsWith(storage) || !Files.isRegularFile(file)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("message", "The certified copy is not available in storage"));
-            }
-            Resource resource = new FileSystemResource(file);
-            String contentType = request.getCertifiedFileName().toLowerCase().endsWith(".pdf")
-                    ? MediaType.APPLICATION_PDF_VALUE : "image/png";
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + request.getCertifiedFileName().replace("\\", "").replace("\"", "") + "\"")
-                    .body(resource);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
-        }
     }
 
     @GetMapping("/credentials/me")
