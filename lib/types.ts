@@ -51,6 +51,9 @@ export type CertificationRequest = {
   originalFileName?: string;
   reviewedByName?: string | null; // officer who picked up / decided it
   reviewedAt?: string | null; // when the decision was made
+  certifiedDocumentAvailable?: boolean;
+  certifiedFileName?: string | null;
+  stampPosition?: string | null;
 };
 
 export type CredentialStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';

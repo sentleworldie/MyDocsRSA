@@ -21,10 +21,12 @@ export function startReview(requestId: number) {
   });
 }
 
-export function approveRequest(requestId: number) {
+export type StampPosition = 'TOP_LEFT' | 'TOP_RIGHT' | 'BOTTOM_LEFT' | 'BOTTOM_RIGHT' | 'CENTER';
+
+export function approveRequest(requestId: number, stampPosition: StampPosition) {
   return apiRequest<{ message: string; request: CertificationRequest; credential: Credential }>(
     `/api/certification/requests/${requestId}/approve`,
-    { method: 'PUT' },
+    { method: 'PUT', body: { stampPosition } },
   );
 }
 

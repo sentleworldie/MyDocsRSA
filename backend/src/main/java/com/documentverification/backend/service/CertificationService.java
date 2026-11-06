@@ -24,17 +24,20 @@ public class CertificationService {
     private final DigitalCredentialRepository credentialRepository;
     private final UserRepository userRepository;
     private final DocumentService documentService;
+    private final CertifiedDocumentService certifiedDocumentService;
     private final int validityMonths;
 
     public CertificationService(CertificationRequestRepository requestRepository,
                                 DigitalCredentialRepository credentialRepository,
                                 UserRepository userRepository,
                                 DocumentService documentService,
+                                CertifiedDocumentService certifiedDocumentService,
                                 @Value("${app.credential.validity-months:6}") int validityMonths) {
         this.requestRepository = requestRepository;
         this.credentialRepository = credentialRepository;
         this.userRepository = userRepository;
         this.documentService = documentService;
+        this.certifiedDocumentService = certifiedDocumentService;
         this.validityMonths = Math.max(3, Math.min(validityMonths, 6));
     }
 
@@ -121,10 +124,19 @@ public class CertificationService {
         return requestRepository.save(r);
     }
 
-    public CertificationRequest approve(Long id, User officer) {
+    public CertificationRequest approve(Long id, User officer, com.documentverification.backend.entity.StampPosition stampPosition) {
         CertificationRequest r = getRequest(id);
         if (r.getStatus() != CertificationRequestStatus.UNDER_REVIEW)
             throw new RuntimeException("Only requests under review can be approved");
+        if (stampPosition == null) throw new IllegalArgumentException("Choose where the certification stamp should appear");
+
+        // Generate the certified copy before committing approval. If stamping fails,
+        // the request remains UNDER_REVIEW and the officer can retry after correcting the file.
+        CertifiedDocumentService.StampedDocument stamped =
+                certifiedDocumentService.createStampedCopy(r.getDocument(), r.getId(), stampPosition);
+        r.setCertifiedFilePath(stamped.path());
+        r.setCertifiedFileName(stamped.fileName());
+        r.setStampPosition(stampPosition);
         r.setStatus(CertificationRequestStatus.APPROVED);
         r.getDocument().setStatus(com.documentverification.backend.entity.VerificationStatus.APPROVED);
         r.getDocument().setRejectionReason(null);
@@ -139,7 +151,8 @@ public class CertificationService {
         credential.setIssuedAt(java.time.LocalDateTime.now());
         credential.setValidUntil(java.time.LocalDateTime.now().plusMonths(validityMonths));
         credential.setRevokedAt(null); credential.setRevocationReason(null);
-        return credentialRepository.save(credential).getId() != null ? r : r;
+        credentialRepository.save(credential);
+        return r;
     }
 
     public CertificationRequest reject(Long id, String reason, User officer) {
@@ -197,6 +210,10 @@ public class CertificationService {
         r.setReviewedById(officer.getId());
         r.setReviewedByName(officer.getFullName());
         r.setReviewedAt(decided ? java.time.LocalDateTime.now() : null);
+    }
+
+    public CertificationRequest getRequestForDownload(Long id) {
+        return getRequest(id);
     }
 
     private CertificationRequest getRequest(Long id) {
